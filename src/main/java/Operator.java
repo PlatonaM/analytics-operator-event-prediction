@@ -15,6 +15,8 @@
  */
 
 
+import handlers.DataHandler;
+import handlers.ModelHandler;
 import org.infai.ses.senergy.operators.Config;
 import org.infai.ses.senergy.operators.Stream;
 import org.infai.ses.senergy.utils.ConfigProvider;
@@ -23,13 +25,19 @@ public class Operator {
 
     public static void main(String[] args) throws Exception {
         Config config = ConfigProvider.getConfig();
-        Client client = new Client(
+        DataHandler dataHandler = new DataHandler(
                 config.getConfigValue("time_field", null),
                 config.getConfigValue("empty_placeholder", ""),
-                config.getConfigValue("delimiter", null),
-                config.getConfigValue("worker_config", null),
-                config.getConfigValue("worker_url", null),
+                config.getConfigValue("delimiter", null)
+        );
+        ModelHandler modelHandler = new ModelHandler(
                 config.getConfigValue("trainer_url", null),
+                config.getConfigValue("ml_config", null)
+        );
+        Client client = new Client(
+                dataHandler,
+                modelHandler,
+                config.getConfigValue("worker_url", null),
                 Boolean.parseBoolean(config.getConfigValue("compressed_input", "false"))
         );
         Stream stream  = new Stream();
