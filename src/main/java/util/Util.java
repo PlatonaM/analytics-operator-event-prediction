@@ -15,10 +15,21 @@
  */
 
 
+package util;
+
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.reflect.TypeToken;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -61,5 +72,37 @@ public class Util {
         Gson gson = new GsonBuilder().serializeNulls().create();
         Type collectionType = new TypeToken<LinkedList<LinkedTreeMap<String, Object>>>(){}.getType();
         return gson.toJson(data, collectionType);
+    }
+
+    private static String httpRequest(HttpUriRequest request) throws IOException {
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+        CloseableHttpResponse response = httpclient.execute(request);
+        try {
+            if (response.getStatusLine().getStatusCode() == 200) {
+                HttpEntity entity = response.getEntity();
+                if (entity != null) {
+                    return stringFromStream(entity.getContent());
+                } else {
+                    throw new RuntimeException("empty response");
+                }
+            } else {
+                throw new RuntimeException(request.getMethod()+ ": " + request.getURI() + " - " + response.getStatusLine().getStatusCode());
+            }
+        } finally {
+            response.close();
+        }
+    }
+
+    public static String httpGet(String url, String contentType) throws IOException {
+        HttpGet request = new HttpGet(url);
+        request.addHeader("content-type", contentType);
+        return httpRequest(request);
+    }
+
+    public static String httpPost(String url, String contentType, String data) throws IOException {
+        HttpPost request = new HttpPost(url);
+        request.addHeader("content-type", contentType);
+        request.setEntity(new StringEntity(data));
+        return httpRequest(request);
     }
 }
