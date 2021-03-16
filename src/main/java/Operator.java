@@ -38,7 +38,9 @@ public class Operator {
                 dataHandler,
                 modelHandler,
                 config.getConfigValue("worker_url", null),
-                Boolean.parseBoolean(config.getConfigValue("compressed_input", "false"))
+                Boolean.parseBoolean(config.getConfigValue("compressed_input", "false")),
+                Long.parseLong(config.getConfigValue("request_poll_delay", "15")),
+                Long.parseLong(config.getConfigValue("request_max_retries", "240"))
         );
         Stream stream  = new Stream();
         stream.start(client);

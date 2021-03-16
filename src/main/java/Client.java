@@ -36,12 +36,16 @@ public class Client extends BaseOperator {
     private final ModelHandler modelHandler;
     private final String workerURL;
     private final boolean compressedInput;
+    private final long requestPollDelay;
+    private final long requestMaxRetries;
 
-    public Client(DataHandler dataHandler, ModelHandler modelHandler, String workerURL, boolean compressedInput) {
+    public Client(DataHandler dataHandler, ModelHandler modelHandler, String workerURL, boolean compressedInput, long requestPollDelay, long requestMaxRetries) {
         this.dataHandler = dataHandler;
         this.modelHandler = modelHandler;
         this.workerURL = workerURL;
         this.compressedInput = compressedInput;
+        this.requestPollDelay = requestPollDelay;
+        this.requestMaxRetries = requestMaxRetries;
     }
 
     private String createJob(List<ModelData> models, String timeField) throws IOException {
