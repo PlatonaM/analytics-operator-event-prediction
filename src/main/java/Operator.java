@@ -23,7 +23,7 @@ import org.infai.ses.senergy.utils.ConfigProvider;
 
 public class Operator {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         Config config = ConfigProvider.getConfig();
         DataHandler dataHandler = new DataHandler(
                 config.getConfigValue("time_field", null),
