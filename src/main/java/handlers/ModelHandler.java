@@ -24,9 +24,7 @@ import models.ModelData;
 import util.Util;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class ModelHandler {
@@ -56,5 +54,12 @@ public class ModelHandler {
                 Util.httpGet(trainerURL + "/" + modelID, "application/json"),
                 ModelData.class
         );
+    }
+
+    public int getColsHashCode(List<String> columns) {
+        List<String> colsCopy = new ArrayList<>(columns);
+        Collections.sort(colsCopy);
+        String colsStr = String.join("", colsCopy);
+        return colsStr.hashCode();
     }
 }
