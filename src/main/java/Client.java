@@ -113,30 +113,12 @@ public class Client extends BaseOperator {
             List<List<String>> modelIDs = modelHandler.getModelIDs((String) inputSource.get("name"));
             Map<Integer, List<ModelData>> models = new HashMap<>();
             for (String modelID: modelIDs.get(0)) {
-                ModelData model = modelHandler.getModel(modelID);
-                int colsHashCode = modelHandler.getColsHashCode(model.columns);
-                if (!models.containsKey(colsHashCode)) {
-                    models.put(colsHashCode, new ArrayList<>());
-                }
-                models.get(colsHashCode).add(model);
+                getAndStoreModel(models, modelID);
             }
             if (!modelIDs.get(1).isEmpty()) {
                 System.out.println("waiting for missing models ..");
                 for (String modelID: modelIDs.get(1)) {
-                    while (true) {
-                        try {
-                            ModelData model = modelHandler.getModel(modelID);
-                            int colsHashCode = modelHandler.getColsHashCode(model.columns);
-                            if (!models.containsKey(colsHashCode)) {
-                                models.put(colsHashCode, new ArrayList<>());
-                            }
-                            models.get(colsHashCode).add(model);
-                            break;
-                        } catch (RuntimeException e) {
-                            System.out.println(e.getMessage());
-                            TimeUnit.SECONDS.sleep(5);
-                        }
-                    }
+                    getAndStoreModel(models, modelID);
                 }
             }
             Map<String, List<Map<String, Number>>> predictions = new HashMap<>();
@@ -155,6 +137,25 @@ public class Client extends BaseOperator {
         } catch (Throwable t) {
             System.out.println("error handling message:");
             t.printStackTrace();
+        }
+    }
+
+    private void getAndStoreModel(Map<Integer, List<ModelData>> models, String modelID) throws Util.HttpRequestException, InterruptedException {
+        for (int i=0; i < requestMaxRetries; i++) {
+            try {
+                ModelData model = modelHandler.getModel(modelID);
+                int colsHashCode = modelHandler.getColsHashCode(model.columns);
+                if (!models.containsKey(colsHashCode)) {
+                    models.put(colsHashCode, new ArrayList<>());
+                }
+                models.get(colsHashCode).add(model);
+                break;
+            } catch (Util.HttpRequestException e) {
+                if (i == requestMaxRetries - 1) {
+                    throw e;
+                }
+                TimeUnit.SECONDS.sleep(requestPollDelay);
+            }
         }
     }
 
