@@ -18,6 +18,7 @@
 package handlers;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 
 public class DataHandler {
@@ -25,8 +26,9 @@ public class DataHandler {
     private final String timeField;
     private final String emptyPlaceholder;
     private final String delimiter;
+    private final Logger logger;
 
-    public DataHandler(String timeField, String emptyPlaceholder, String delimiter) {
+    public DataHandler(String timeField, String emptyPlaceholder, String delimiter, Logger logger) {
         if (timeField == null || timeField.isBlank()) {
             throw new RuntimeException("invalid time_field");
         }
@@ -36,6 +38,7 @@ public class DataHandler {
         this.timeField = timeField;
         this.emptyPlaceholder = emptyPlaceholder;
         this.delimiter = delimiter;
+        this.logger = logger;
     }
 
     private String getValue(Object obj) {
@@ -64,13 +67,13 @@ public class DataHandler {
     private List<String> getHeader(List<Map<String, ?>> data, List<String> safeColumns) {
         List<String> columns = new ArrayList<>(data.get(0).keySet());
         if (columns.retainAll(safeColumns)) {
-            System.out.println("removed unknown columns");
+            logger.warning("removed unknown columns");
         }
         List<String> missingCols = new ArrayList<>(safeColumns);
         missingCols.removeAll(columns);
         if (!missingCols.isEmpty()) {
             columns.addAll(missingCols);
-            System.out.println("added missing columns");
+            logger.finest("added missing columns");
         }
         return buildHeader(columns);
     }

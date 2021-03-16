@@ -30,7 +30,8 @@ public class Operator {
         DataHandler dataHandler = new DataHandler(
                 config.getConfigValue("time_field", null),
                 config.getConfigValue("empty_placeholder", ""),
-                config.getConfigValue("delimiter", null)
+                config.getConfigValue("delimiter", null),
+                logger.getLogger()
         );
         ModelHandler modelHandler = new ModelHandler(
                 config.getConfigValue("trainer_url", null),

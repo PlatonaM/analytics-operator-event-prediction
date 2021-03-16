@@ -112,14 +112,14 @@ public class Client extends BaseOperator {
             } else {
                 data = new Gson().fromJson(message.getInput("data").getString(), new TypeToken<LinkedList<Map<String, ?>>>(){}.getType());
             }
-            System.out.println("received message with " + data.size() + " data points");
+            logger.info("received message containing " + data.size() + " data points ...");
             List<List<String>> modelIDs = modelHandler.getModelIDs((String) inputSource.get("name"));
             Map<Integer, List<ModelData>> models = new HashMap<>();
             for (String modelID: modelIDs.get(0)) {
                 getAndStoreModel(models, modelID);
             }
             if (!modelIDs.get(1).isEmpty()) {
-                System.out.println("waiting for missing models ..");
+                logger.info("waiting for missing models ..");
                 for (String modelID: modelIDs.get(1)) {
                     getAndStoreModel(models, modelID);
                 }
@@ -166,9 +166,9 @@ public class Client extends BaseOperator {
                     }
                 }
             }
-            System.out.println("predictions: " + predictions);
+            logger.finest("predictions: " + predictions);
         } catch (Throwable t) {
-            System.out.println("error handling message:");
+            logger.severe("error handling message:");
             t.printStackTrace();
         }
     }
