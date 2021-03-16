@@ -27,6 +27,12 @@ public class DataHandler {
     private final String delimiter;
 
     public DataHandler(String timeField, String emptyPlaceholder, String delimiter) {
+        if (timeField == null || timeField.isBlank()) {
+            throw new RuntimeException("invalid time_field");
+        }
+        if (delimiter == null || delimiter.isBlank()) {
+            throw new RuntimeException("invalid delimiter");
+        }
         this.timeField = timeField;
         this.emptyPlaceholder = emptyPlaceholder;
         this.delimiter = delimiter;

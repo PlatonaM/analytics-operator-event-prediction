@@ -40,6 +40,9 @@ public class Client extends BaseOperator {
     private final long requestMaxRetries;
 
     public Client(DataHandler dataHandler, ModelHandler modelHandler, String workerURL, boolean compressedInput, long requestPollDelay, long requestMaxRetries) {
+        if (workerURL == null || workerURL.isBlank()) {
+            throw new RuntimeException("invalid worker_url: " + workerURL);
+        }
         this.dataHandler = dataHandler;
         this.modelHandler = modelHandler;
         this.workerURL = workerURL;

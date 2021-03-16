@@ -33,6 +33,12 @@ public class ModelHandler {
     private final String mlConfig;
 
     public ModelHandler(String trainerURL, String mlConfig) {
+        if (trainerURL == null || trainerURL.isBlank()) {
+            throw new RuntimeException("invalid trainer_url");
+        }
+        if (mlConfig == null || mlConfig.isBlank()) {
+            throw new RuntimeException("invalid ml_config");
+        }
         this.trainerURL = trainerURL;
         this.mlConfig = mlConfig;
     }
