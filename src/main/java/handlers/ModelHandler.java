@@ -56,13 +56,5 @@ public class ModelHandler {
                 Util.httpGet(trainerURL + "/" + modelID, "application/json"),
                 ModelData.class
         );
-        /*while (true) {
-            try {
-                //return Util.httpGet(trainerURL + "/" + modelID, "application/json");
-            } catch (Exception e) {
-                System.out.println("retrieving model failed - " + e.getMessage());
-            }
-            TimeUnit.SECONDS.sleep(5);
-        }*/
     }
 }
