@@ -101,18 +101,47 @@ public class Client extends BaseOperator {
             }
             System.out.println("received message with " + data.size() + " data points");
             List<List<String>> modelIDs = modelHandler.getModelIDs((String) inputSource.get("name"));
-            List<ModelData> models = new ArrayList<>();
+            Map<Integer, List<ModelData>> models = new HashMap<>();
             for (String modelID: modelIDs.get(0)) {
                 ModelData model = modelHandler.getModel(modelID);
-                models.add(model);
+                int colsHashCode = modelHandler.getColsHashCode(model.columns);
+                if (!models.containsKey(colsHashCode)) {
+                    models.put(colsHashCode, new ArrayList<>());
+                }
+                models.get(colsHashCode).add(model);
             }
             if (!modelIDs.get(1).isEmpty()) {
                 System.out.println("waiting for missing models ..");
+                for (String modelID: modelIDs.get(1)) {
+                    while (true) {
+                        try {
+                            ModelData model = modelHandler.getModel(modelID);
+                            int colsHashCode = modelHandler.getColsHashCode(model.columns);
+                            if (!models.containsKey(colsHashCode)) {
+                                models.put(colsHashCode, new ArrayList<>());
+                            }
+                            models.get(colsHashCode).add(model);
+                            break;
+                        } catch (RuntimeException e) {
+                            System.out.println(e.getMessage());
+                            TimeUnit.SECONDS.sleep(5);
+                        }
+                    }
+                }
             }
-            String jobID = createJob(models, dataHandler.getTimeField());
-            addDataToJob(dataHandler.getCSV(data), jobID);
-            JobData jobResult = getJobResult(jobID);
-            System.out.println("prediction: " + jobResult.result);
+            Map<String, List<Map<String, Number>>> predictions = new HashMap<>();
+            for (int key: models.keySet()) {
+                String jobID = createJob(models.get(key), dataHandler.getTimeField());
+                addDataToJob(dataHandler.getCSV(data, models.get(key).get(0).columns), jobID);
+                JobData jobResult = getJobResult(jobID);
+                for (String resKey: jobResult.result.keySet()) {
+                    if (!predictions.containsKey(resKey)) {
+                        predictions.put(resKey, new ArrayList<>());
+                    }
+                    predictions.get(resKey).addAll(jobResult.result.get(resKey));
+                }
+            }
+            System.out.println("predictions: " + predictions);
         } catch (Throwable t) {
             System.out.println("error handling message:");
             t.printStackTrace();
