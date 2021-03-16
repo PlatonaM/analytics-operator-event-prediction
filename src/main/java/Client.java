@@ -27,6 +27,7 @@ import org.infai.ses.senergy.operators.Message;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 
 public class Client extends BaseOperator {
@@ -49,8 +50,9 @@ public class Client extends BaseOperator {
     private final boolean compressedInput;
     private final long requestPollDelay;
     private final long requestMaxRetries;
+    private final Logger logger;
 
-    public Client(DataHandler dataHandler, ModelHandler modelHandler, String workerURL, boolean compressedInput, long requestPollDelay, long requestMaxRetries) {
+    public Client(DataHandler dataHandler, ModelHandler modelHandler, String workerURL, boolean compressedInput, long requestPollDelay, long requestMaxRetries, Logger logger) {
         if (workerURL == null || workerURL.isBlank()) {
             throw new RuntimeException("invalid worker_url: " + workerURL);
         }
@@ -60,6 +62,7 @@ public class Client extends BaseOperator {
         this.compressedInput = compressedInput;
         this.requestPollDelay = requestPollDelay;
         this.requestMaxRetries = requestMaxRetries;
+        this.logger = logger;
     }
 
     private String createJob(List<ModelData> models, String timeField) throws Util.HttpRequestException {

@@ -20,11 +20,13 @@ import handlers.ModelHandler;
 import org.infai.ses.senergy.operators.Config;
 import org.infai.ses.senergy.operators.Stream;
 import org.infai.ses.senergy.utils.ConfigProvider;
+import util.Logger;
 
 public class Operator {
 
     public static void main(String[] args) {
         Config config = ConfigProvider.getConfig();
+        Logger logger = new Logger(config.getConfigValue("logging_level", "info"));
         DataHandler dataHandler = new DataHandler(
                 config.getConfigValue("time_field", null),
                 config.getConfigValue("empty_placeholder", ""),
@@ -40,7 +42,8 @@ public class Operator {
                 config.getConfigValue("worker_url", null),
                 Boolean.parseBoolean(config.getConfigValue("compressed_input", "false")),
                 Long.parseLong(config.getConfigValue("request_poll_delay", "15")),
-                Long.parseLong(config.getConfigValue("request_max_retries", "240"))
+                Long.parseLong(config.getConfigValue("request_max_retries", "240")),
+                logger.getLogger()
         );
         Stream stream  = new Stream();
         stream.start(client);
