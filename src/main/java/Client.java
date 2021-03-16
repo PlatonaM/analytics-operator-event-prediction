@@ -25,12 +25,23 @@ import handlers.*;
 import org.infai.ses.senergy.operators.BaseOperator;
 import org.infai.ses.senergy.operators.Message;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
 public class Client extends BaseOperator {
+
+    public static class JobNotDoneException extends Exception {
+        public JobNotDoneException(String errorMessage) {
+            super(errorMessage);
+        }
+    }
+
+    public static class JobFailedException extends Exception {
+        public JobFailedException(String errorMessage) {
+            super(errorMessage);
+        }
+    }
 
     private final DataHandler dataHandler;
     private final ModelHandler modelHandler;
@@ -51,7 +62,7 @@ public class Client extends BaseOperator {
         this.requestMaxRetries = requestMaxRetries;
     }
 
-    private String createJob(List<ModelData> models, String timeField) throws IOException {
+    private String createJob(List<ModelData> models, String timeField) throws Util.HttpRequestException {
         return Util.httpPost(
                 workerURL,
                 "application/json",
@@ -59,30 +70,22 @@ public class Client extends BaseOperator {
         );
     }
 
-    private void addDataToJob(String csvData, String jobID) throws IOException {
+    private void addDataToJob(String csvData, String jobID) throws Util.HttpRequestException {
         Util.httpPost(workerURL + "/" + jobID, "text/csv", csvData);
     }
 
-    private JobData getJobResult(String jobID) throws InterruptedException {
+    private JobData getJobResult(String jobID) throws Util.HttpRequestException, JobFailedException, JobNotDoneException {
         JobData jobRes;
-        while (true) {
-            try {
-                jobRes = new Gson().fromJson(
-                        Util.httpGet(workerURL + "/" + jobID, "application/json"),
-                        JobData.class
-                );
-                if (jobRes.status.equals("finished")) {
-                    return jobRes;
-                } else if (jobRes.status.equals("failed")) {
-                    throw new RuntimeException("job failed - worker reason: " + jobRes.reason);
-                }
-                TimeUnit.SECONDS.sleep(5);
-            } catch (RuntimeException e) {
-                throw e;
-            } catch (Exception e) {
-                System.out.println("retrieving job result failed - " + e.getMessage());
-            }
-            TimeUnit.SECONDS.sleep(5);
+        jobRes = new Gson().fromJson(
+                Util.httpGet(workerURL + "/" + jobID, "application/json"),
+                JobData.class
+        );
+        if (jobRes.status.equals("finished")) {
+            return jobRes;
+        } else if (jobRes.status.equals("failed")) {
+            throw new JobFailedException("worker reason: " + jobRes.reason);
+        } else {
+            throw new JobNotDoneException(jobRes.status);
         }
     }
 
