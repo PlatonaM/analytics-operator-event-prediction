@@ -123,14 +123,44 @@ public class Client extends BaseOperator {
             }
             Map<String, List<Map<String, Number>>> predictions = new HashMap<>();
             for (int key: models.keySet()) {
-                String jobID = createJob(models.get(key), dataHandler.getTimeField());
-                addDataToJob(dataHandler.getCSV(data, models.get(key).get(0).columns), jobID);
-                JobData jobResult = getJobResult(jobID);
-                for (String resKey: jobResult.result.keySet()) {
-                    if (!predictions.containsKey(resKey)) {
-                        predictions.put(resKey, new ArrayList<>());
+                for (int i=0; i < requestMaxRetries; i++) {
+                    try {
+                        String jobID = createJob(models.get(key), dataHandler.getTimeField());
+                        for (int y=0; y < requestMaxRetries; y++) {
+                            try {
+                                addDataToJob(dataHandler.getCSV(data, models.get(key).get(0).columns), jobID);
+                                for (int x=0; x < requestMaxRetries; x++) {
+                                    try {
+                                        JobData jobResult = getJobResult(jobID);
+                                        for (String resKey: jobResult.result.keySet()) {
+                                            if (!predictions.containsKey(resKey)) {
+                                                predictions.put(resKey, new ArrayList<>());
+                                            }
+                                            predictions.get(resKey).addAll(jobResult.result.get(resKey));
+                                        }
+                                        break;
+                                    } catch (Util.HttpRequestException | JobNotDoneException e) {
+                                        if (x == requestMaxRetries - 1) {
+                                            throw e;
+                                        }
+                                        TimeUnit.SECONDS.sleep(requestPollDelay);
+                                    }
+                                }
+                                break;
+                            } catch (Util.HttpRequestException e) {
+                                if (y == requestMaxRetries - 1) {
+                                    throw e;
+                                }
+                                TimeUnit.SECONDS.sleep(requestPollDelay);
+                            }
+                        }
+                        break;
+                    } catch (Util.HttpRequestException e) {
+                        if (i == requestMaxRetries - 1) {
+                            throw e;
+                        }
+                        TimeUnit.SECONDS.sleep(requestPollDelay);
                     }
-                    predictions.get(resKey).addAll(jobResult.result.get(resKey));
                 }
             }
             System.out.println("predictions: " + predictions);
