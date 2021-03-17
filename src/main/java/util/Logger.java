@@ -32,7 +32,7 @@ public class Logger {
         }
 
         private String calcDate(long millisecs) {
-            SimpleDateFormat date_format = new SimpleDateFormat("MM.dd.yyyy KK:mm:ss a");
+            SimpleDateFormat date_format = new SimpleDateFormat("MM.dd.yyyy hh:mm:ss a");
             Date resultdate = new Date(millisecs);
             return date_format.format(resultdate);
         }
