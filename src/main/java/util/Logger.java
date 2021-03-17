@@ -51,13 +51,8 @@ public class Logger {
     static private Handler loggerHandler;
 
     static public void setup(String level) {
-        java.util.logging.Logger rootLogger = java.util.logging.Logger.getLogger("");
-        Formatter formatter = new MsgFormatter();
         loggerHandler = new ConsoleHandler();
-        loggerHandler.setFormatter(formatter);
-        for (Handler h : rootLogger.getHandlers()) {
-            h.setFormatter(formatter);
-        }
+        loggerHandler.setFormatter(new MsgFormatter());
         loggerHandler.setLevel(levelMap.get(level));
         loggerLevel = levelMap.get(level);
     }
