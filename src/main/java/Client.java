@@ -112,6 +112,7 @@ public class Client extends BaseOperator {
                 data = new Gson().fromJson(message.getInput("data").getString(), new TypeToken<LinkedList<Map<String, ?>>>(){}.getType());
             }
             logger.info("received message containing " + data.size() + " data points ...");
+            logger.info("retrieving model IDs ...");
             List<List<String>> modelIDs = new ArrayList<>();
             for (int i=0; i <= requestMaxRetries; i++) {
                 try {
@@ -126,26 +127,37 @@ public class Client extends BaseOperator {
                 }
             }
             Map<Integer, List<ModelData>> models = new HashMap<>();
+            logger.info("retrieving " + modelIDs.get(0).size() + " models ...");
             for (String modelID: modelIDs.get(0)) {
                 getAndStoreModel(models, modelID);
             }
             if (!modelIDs.get(1).isEmpty()) {
-                logger.info("waiting for missing models ..");
+                logger.info("waiting for " + modelIDs.get(1).size() + " models ...");
                 for (String modelID: modelIDs.get(1)) {
+                    logger.fine("waiting for model " + modelID);
                     getAndStoreModel(models, modelID);
                 }
             }
             Map<String, List<Map<String, Number>>> predictions = new HashMap<>();
+            if (models.keySet().size() > 1) {
+                logger.warning("using models with diverging feature sets");
+                logger.info("starting " + models.keySet().size() + " jobs ...");
+            } else {
+                logger.info("starting job ...");
+            }
             for (int key: models.keySet()) {
                 for (int i=0; i <= requestMaxRetries; i++) {
                     try {
                         String jobID = createJob(models.get(key), dataHandler.getTimeField());
+                        logger.fine("created job " + jobID);
                         for (int y=0; y <= requestMaxRetries; y++) {
                             try {
                                 addDataToJob(dataHandler.getCSV(data, models.get(key).get(0).columns), jobID);
+                                logger.fine("added data to job " + jobID);
                                 for (int x=0; x <= requestMaxRetries; x++) {
                                     try {
                                         JobData jobResult = getJobResult(jobID);
+                                        logger.fine("retrieved results from job " + jobID);
                                         for (String resKey: jobResult.result.keySet()) {
                                             if (!predictions.containsKey(resKey)) {
                                                 predictions.put(resKey, new ArrayList<>());
@@ -153,8 +165,15 @@ public class Client extends BaseOperator {
                                             predictions.get(resKey).addAll(jobResult.result.get(resKey));
                                         }
                                         break;
-                                    } catch (Util.HttpRequestException | JobNotDoneException e) {
+                                    } catch (Util.HttpRequestException e) {
                                         if (x == requestMaxRetries) {
+                                            logger.severe("retrieved results from job " + jobID + " failed");
+                                            throw e;
+                                        }
+                                        TimeUnit.SECONDS.sleep(requestPollDelay);
+                                    } catch (JobNotDoneException e) {
+                                        if (x == requestMaxRetries) {
+                                            logger.severe("job " + jobID + " took to long - try changing 'request_poll_delay' or 'request_max_retries'");
                                             throw e;
                                         }
                                         TimeUnit.SECONDS.sleep(requestPollDelay);
@@ -163,6 +182,7 @@ public class Client extends BaseOperator {
                                 break;
                             } catch (Util.HttpRequestException e) {
                                 if (y == requestMaxRetries) {
+                                    logger.severe("adding data to job " + jobID + " failed");
                                     throw e;
                                 }
                                 TimeUnit.SECONDS.sleep(requestPollDelay);
@@ -171,13 +191,14 @@ public class Client extends BaseOperator {
                         break;
                     } catch (Util.HttpRequestException e) {
                         if (i == requestMaxRetries) {
+                            logger.severe("creating job failed");
                             throw e;
                         }
                         TimeUnit.SECONDS.sleep(requestPollDelay);
                     }
                 }
             }
-            logger.finest("predictions: " + predictions);
+            logger.info("outputting results message ...");
         } catch (Throwable t) {
             logger.severe("error handling message:");
             t.printStackTrace();
@@ -193,9 +214,11 @@ public class Client extends BaseOperator {
                     models.put(colsHashCode, new ArrayList<>());
                 }
                 models.get(colsHashCode).add(model);
+                logger.fine("retrieved model " + model.id + " (" + model.created + ")");
                 break;
             } catch (Util.HttpRequestException e) {
                 if (i == requestMaxRetries) {
+                    logger.severe("retrieving model " + modelID + " failed");
                     throw e;
                 }
                 TimeUnit.SECONDS.sleep(requestPollDelay);
