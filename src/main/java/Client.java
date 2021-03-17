@@ -183,6 +183,9 @@ public class Client extends BaseOperator {
                                             throw e;
                                         }
                                         TimeUnit.SECONDS.sleep(requestPollDelay);
+                                    } catch (JobFailedException e) {
+                                        logger.severe("job " + jobID + " failed - " + e.getMessage());
+                                        throw e;
                                     }
                                 }
                                 break;
@@ -205,6 +208,8 @@ public class Client extends BaseOperator {
                 }
             }
             logger.info("outputting results message ...");
+        } catch (Util.HttpRequestException | JobFailedException | JobNotDoneException e) {
+            logger.severe("error handling message");
         } catch (Throwable t) {
             logger.severe("error handling message:");
             t.printStackTrace();
