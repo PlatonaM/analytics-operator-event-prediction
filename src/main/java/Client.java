@@ -50,9 +50,9 @@ public class Client extends BaseOperator {
     private final boolean compressedInput;
     private final long requestPollDelay;
     private final long requestMaxRetries;
-    private final Logger logger;
+    private final static Logger logger = Logger.getLogger(Client.class.getName());
 
-    public Client(DataHandler dataHandler, ModelHandler modelHandler, String workerURL, boolean compressedInput, long requestPollDelay, long requestMaxRetries, Logger logger) {
+    public Client(DataHandler dataHandler, ModelHandler modelHandler, String workerURL, boolean compressedInput, long requestPollDelay, long requestMaxRetries) {
         if (workerURL == null || workerURL.isBlank()) {
             throw new RuntimeException("invalid worker_url: " + workerURL);
         }
@@ -62,7 +62,6 @@ public class Client extends BaseOperator {
         this.compressedInput = compressedInput;
         this.requestPollDelay = requestPollDelay;
         this.requestMaxRetries = requestMaxRetries;
-        this.logger = logger;
     }
 
     private String createJob(List<ModelData> models, String timeField) throws Util.HttpRequestException {

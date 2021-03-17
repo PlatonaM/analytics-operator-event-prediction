@@ -26,12 +26,11 @@ public class Operator {
 
     public static void main(String[] args) {
         Config config = ConfigProvider.getConfig();
-        Logger logger = new Logger(config.getConfigValue("logging_level", "info"));
+        Logger.setup(config.getConfigValue("logging_level", "info"));
         DataHandler dataHandler = new DataHandler(
                 config.getConfigValue("time_field", null),
                 config.getConfigValue("empty_placeholder", ""),
-                config.getConfigValue("delimiter", null),
-                logger.getLogger()
+                config.getConfigValue("delimiter", null)
         );
         ModelHandler modelHandler = new ModelHandler(
                 config.getConfigValue("trainer_url", null),
@@ -43,8 +42,7 @@ public class Operator {
                 config.getConfigValue("worker_url", null),
                 Boolean.parseBoolean(config.getConfigValue("compressed_input", "false")),
                 Long.parseLong(config.getConfigValue("request_poll_delay", "15")),
-                Long.parseLong(config.getConfigValue("request_max_retries", "240")),
-                logger.getLogger()
+                Long.parseLong(config.getConfigValue("request_max_retries", "240"))
         );
         Stream stream  = new Stream();
         stream.start(client);

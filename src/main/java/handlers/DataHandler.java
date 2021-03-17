@@ -26,9 +26,9 @@ public class DataHandler {
     private final String timeField;
     private final String emptyPlaceholder;
     private final String delimiter;
-    private final Logger logger;
+    private final static Logger logger = Logger.getLogger(DataHandler.class.getName());
 
-    public DataHandler(String timeField, String emptyPlaceholder, String delimiter, Logger logger) {
+    public DataHandler(String timeField, String emptyPlaceholder, String delimiter) {
         if (timeField == null || timeField.isBlank()) {
             throw new RuntimeException("invalid time_field");
         }
@@ -38,7 +38,6 @@ public class DataHandler {
         this.timeField = timeField;
         this.emptyPlaceholder = emptyPlaceholder;
         this.delimiter = delimiter;
-        this.logger = logger;
     }
 
     private String getValue(Object obj) {
