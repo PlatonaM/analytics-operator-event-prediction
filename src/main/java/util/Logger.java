@@ -47,12 +47,26 @@ public class Logger {
         levelMap.put("debug", Level.FINEST);
     }
 
+    static private Level loggerLevel;
+    static private Handler loggerHandler;
+
     static public void setup(String level) {
         java.util.logging.Logger rootLogger = java.util.logging.Logger.getLogger("");
-        MsgFormatter msgFormatter = new MsgFormatter();
+        Formatter formatter = new MsgFormatter();
+        loggerHandler = new ConsoleHandler();
+        loggerHandler.setFormatter(formatter);
         for (Handler h : rootLogger.getHandlers()) {
-            h.setFormatter(msgFormatter);
+            h.setFormatter(formatter);
         }
-        rootLogger.setLevel(levelMap.get(level));
+        loggerHandler.setLevel(levelMap.get(level));
+        loggerLevel = levelMap.get(level);
+    }
+
+    static public java.util.logging.Logger getLogger(String name) {
+        java.util.logging.Logger logger = java.util.logging.Logger.getLogger(name);
+        logger.addHandler(loggerHandler);
+        logger.setLevel(loggerLevel);
+        logger.setUseParentHandlers(false);
+        return logger;
     }
 }
