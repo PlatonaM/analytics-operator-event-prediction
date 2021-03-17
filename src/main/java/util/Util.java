@@ -32,24 +32,21 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import java.io.*;
-import java.util.*;
-import java.util.zip.GZIPInputStream;
 import java.lang.reflect.Type;
+import java.util.Base64;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 
 public class Util {
 
-    public static class HttpRequestException extends Exception {
-        public HttpRequestException(String errorMessage) {
-            super(errorMessage);
-        }
-    }
-
     public static String stringFromStream(InputStream inputStream) throws IOException {
         StringBuilder resultString = new StringBuilder();
         int b = inputStream.read();
-        while(b != -1){
+        while (b != -1) {
             resultString.append(((char) b));
             b = inputStream.read();
         }
@@ -74,7 +71,8 @@ public class Util {
 
     public static String toJSON(List<Map<String, Object>> data) {
         Gson gson = new GsonBuilder().serializeNulls().create();
-        Type collectionType = new TypeToken<LinkedList<LinkedTreeMap<String, Object>>>(){}.getType();
+        Type collectionType = new TypeToken<LinkedList<LinkedTreeMap<String, Object>>>() {
+        }.getType();
         return gson.toJson(data, collectionType);
     }
 
@@ -91,7 +89,7 @@ public class Util {
                         throw new HttpRequestException("empty response");
                     }
                 } else {
-                    throw new HttpRequestException(request.getMethod()+ ": " + request.getURI() + " - " + response.getStatusLine().getStatusCode());
+                    throw new HttpRequestException(request.getMethod() + ": " + request.getURI() + " - " + response.getStatusLine().getStatusCode());
                 }
             } finally {
                 response.close();
@@ -116,6 +114,12 @@ public class Util {
             return httpRequest(request);
         } catch (UnsupportedEncodingException e) {
             throw new HttpRequestException(e.getMessage());
+        }
+    }
+
+    public static class HttpRequestException extends Exception {
+        public HttpRequestException(String errorMessage) {
+            super(errorMessage);
         }
     }
 }
