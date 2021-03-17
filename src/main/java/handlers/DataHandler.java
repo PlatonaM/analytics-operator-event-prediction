@@ -26,7 +26,7 @@ public class DataHandler {
     private final String timeField;
     private final String emptyPlaceholder;
     private final String delimiter;
-    private final static Logger logger = Logger.getLogger(DataHandler.class.getName());
+    private final static Logger logger = util.Logger.getLogger(DataHandler.class.getName());
 
     public DataHandler(String timeField, String emptyPlaceholder, String delimiter) {
         if (timeField == null || timeField.isBlank()) {

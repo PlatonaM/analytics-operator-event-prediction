@@ -50,7 +50,7 @@ public class Client extends BaseOperator {
     private final boolean compressedInput;
     private final long requestPollDelay;
     private final long requestMaxRetries;
-    private final static Logger logger = Logger.getLogger(Client.class.getName());
+    private final static Logger logger = util.Logger.getLogger(Client.class.getName());
 
     public Client(DataHandler dataHandler, ModelHandler modelHandler, String workerURL, boolean compressedInput, long requestPollDelay, long requestMaxRetries) {
         if (workerURL == null || workerURL.isBlank()) {
