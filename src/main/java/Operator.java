@@ -45,7 +45,7 @@ public class Operator {
                 Long.parseLong(config.getConfigValue("request_max_retries", "240")),
                 Boolean.parseBoolean(config.getConfigValue("fix_features", "false"))
         );
-        Stream stream  = new Stream();
+        Stream stream = new Stream();
         stream.start(client);
     }
 }
