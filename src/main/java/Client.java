@@ -125,13 +125,13 @@ public class Client extends BaseOperator {
             }
             Map<String, List<Map<String, Number>>> predictions = new HashMap<>();
             for (int key: models.keySet()) {
-                for (int i=0; i < requestMaxRetries; i++) {
+                for (int i=0; i <= requestMaxRetries; i++) {
                     try {
                         String jobID = createJob(models.get(key), dataHandler.getTimeField());
-                        for (int y=0; y < requestMaxRetries; y++) {
+                        for (int y=0; y <= requestMaxRetries; y++) {
                             try {
                                 addDataToJob(dataHandler.getCSV(data, models.get(key).get(0).columns), jobID);
-                                for (int x=0; x < requestMaxRetries; x++) {
+                                for (int x=0; x <= requestMaxRetries; x++) {
                                     try {
                                         JobData jobResult = getJobResult(jobID);
                                         for (String resKey: jobResult.result.keySet()) {
@@ -142,7 +142,7 @@ public class Client extends BaseOperator {
                                         }
                                         break;
                                     } catch (Util.HttpRequestException | JobNotDoneException e) {
-                                        if (x == requestMaxRetries - 1) {
+                                        if (x == requestMaxRetries) {
                                             throw e;
                                         }
                                         TimeUnit.SECONDS.sleep(requestPollDelay);
@@ -150,7 +150,7 @@ public class Client extends BaseOperator {
                                 }
                                 break;
                             } catch (Util.HttpRequestException e) {
-                                if (y == requestMaxRetries - 1) {
+                                if (y == requestMaxRetries) {
                                     throw e;
                                 }
                                 TimeUnit.SECONDS.sleep(requestPollDelay);
@@ -158,7 +158,7 @@ public class Client extends BaseOperator {
                         }
                         break;
                     } catch (Util.HttpRequestException e) {
-                        if (i == requestMaxRetries - 1) {
+                        if (i == requestMaxRetries) {
                             throw e;
                         }
                         TimeUnit.SECONDS.sleep(requestPollDelay);
@@ -173,7 +173,7 @@ public class Client extends BaseOperator {
     }
 
     private void getAndStoreModel(Map<Integer, List<ModelData>> models, String modelID) throws Util.HttpRequestException, InterruptedException {
-        for (int i=0; i < requestMaxRetries; i++) {
+        for (int i=0; i <= requestMaxRetries; i++) {
             try {
                 ModelData model = modelHandler.getModel(modelID);
                 int colsHashCode = modelHandler.getColsHashCode(model.columns);
@@ -183,7 +183,7 @@ public class Client extends BaseOperator {
                 models.get(colsHashCode).add(model);
                 break;
             } catch (Util.HttpRequestException e) {
-                if (i == requestMaxRetries - 1) {
+                if (i == requestMaxRetries) {
                     throw e;
                 }
                 TimeUnit.SECONDS.sleep(requestPollDelay);
