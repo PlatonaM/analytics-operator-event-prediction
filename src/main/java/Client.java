@@ -15,15 +15,16 @@
  */
 
 
-import models.JobData;
-import models.ModelData;
-import util.Util;
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.reflect.TypeToken;
-import handlers.*;
+import handlers.DataHandler;
+import handlers.ModelHandler;
+import models.JobData;
+import models.ModelData;
 import org.infai.ses.senergy.operators.BaseOperator;
 import org.infai.ses.senergy.operators.Message;
+import util.Util;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -32,18 +33,7 @@ import java.util.logging.Logger;
 
 public class Client extends BaseOperator {
 
-    public static class JobNotDoneException extends Exception {
-        public JobNotDoneException(String errorMessage) {
-            super(errorMessage);
-        }
-    }
-
-    public static class JobFailedException extends Exception {
-        public JobFailedException(String errorMessage) {
-            super(errorMessage);
-        }
-    }
-
+    private final static Logger logger = util.Logger.getLogger(Client.class.getName());
     private final DataHandler dataHandler;
     private final ModelHandler modelHandler;
     private final String workerURL;
@@ -51,8 +41,6 @@ public class Client extends BaseOperator {
     private final long requestPollDelay;
     private final long requestMaxRetries;
     private final boolean fixFeatures;
-    private final static Logger logger = util.Logger.getLogger(Client.class.getName());
-
     public Client(DataHandler dataHandler, ModelHandler modelHandler, String workerURL, boolean compressedInput, long requestPollDelay, long requestMaxRetries, boolean fixFeatures) {
         if (workerURL == null || workerURL.isBlank()) {
             throw new RuntimeException("invalid worker_url: " + workerURL);
@@ -99,7 +87,8 @@ public class Client extends BaseOperator {
         List<Map<String, ?>> data;
         Map<?, ?> inputSource;
         try {
-            metaData = new Gson().fromJson(message.getInput("meta_data").getString(), new TypeToken<Map<String, ?>>(){}.getType());
+            metaData = new Gson().fromJson(message.getInput("meta_data").getString(), new TypeToken<Map<String, ?>>() {
+            }.getType());
             List<?> inputSources = (ArrayList<?>) metaData.get("input_sources");
             if (inputSources == null) {
                 throw new RuntimeException("missing input source");
@@ -109,14 +98,16 @@ public class Client extends BaseOperator {
             }
             inputSource = (LinkedTreeMap<?, ?>) inputSources.get(0);
             if (compressedInput) {
-                data = new Gson().fromJson(Util.decompress(message.getInput("data").getString()), new TypeToken<LinkedList<Map<String, ?>>>(){}.getType());
+                data = new Gson().fromJson(Util.decompress(message.getInput("data").getString()), new TypeToken<LinkedList<Map<String, ?>>>() {
+                }.getType());
             } else {
-                data = new Gson().fromJson(message.getInput("data").getString(), new TypeToken<LinkedList<Map<String, ?>>>(){}.getType());
+                data = new Gson().fromJson(message.getInput("data").getString(), new TypeToken<LinkedList<Map<String, ?>>>() {
+                }.getType());
             }
             logger.info("received message containing " + data.size() + " data points ...");
             logger.info("retrieving model IDs ...");
             List<List<String>> modelIDs = new ArrayList<>();
-            for (int i=0; i <= requestMaxRetries; i++) {
+            for (int i = 0; i <= requestMaxRetries; i++) {
                 try {
                     modelIDs.addAll(modelHandler.getModelIDs((String) inputSource.get("name")));
                     break;
@@ -130,12 +121,12 @@ public class Client extends BaseOperator {
             }
             Map<Integer, List<ModelData>> models = new HashMap<>();
             logger.info("retrieving " + modelIDs.get(0).size() + " models ...");
-            for (String modelID: modelIDs.get(0)) {
+            for (String modelID : modelIDs.get(0)) {
                 getAndStoreModel(models, modelID);
             }
             if (!modelIDs.get(1).isEmpty()) {
                 logger.info("waiting for " + modelIDs.get(1).size() + " models ...");
-                for (String modelID: modelIDs.get(1)) {
+                for (String modelID : modelIDs.get(1)) {
                     logger.fine("waiting for model " + modelID);
                     getAndStoreModel(models, modelID);
                 }
@@ -147,12 +138,12 @@ public class Client extends BaseOperator {
             } else {
                 logger.info("starting job ...");
             }
-            for (int key: models.keySet()) {
-                for (int i=0; i <= requestMaxRetries; i++) {
+            for (int key : models.keySet()) {
+                for (int i = 0; i <= requestMaxRetries; i++) {
                     try {
                         String jobID = createJob(models.get(key), dataHandler.getTimeField());
                         logger.fine("created job " + jobID);
-                        for (int y=0; y <= requestMaxRetries; y++) {
+                        for (int y = 0; y <= requestMaxRetries; y++) {
                             try {
                                 if (fixFeatures) {
                                     addDataToJob(dataHandler.getCSV(data, models.get(key).get(0).columns), jobID);
@@ -160,11 +151,11 @@ public class Client extends BaseOperator {
                                     addDataToJob(dataHandler.getCSV(data), jobID);
                                 }
                                 logger.fine("added data to job " + jobID);
-                                for (int x=0; x <= requestMaxRetries; x++) {
+                                for (int x = 0; x <= requestMaxRetries; x++) {
                                     try {
                                         JobData jobResult = getJobResult(jobID);
                                         logger.fine("retrieved results from job " + jobID);
-                                        for (String resKey: jobResult.result.keySet()) {
+                                        for (String resKey : jobResult.result.keySet()) {
                                             if (!predictions.containsKey(resKey)) {
                                                 predictions.put(resKey, new ArrayList<>());
                                             }
@@ -217,7 +208,7 @@ public class Client extends BaseOperator {
     }
 
     private void getAndStoreModel(Map<Integer, List<ModelData>> models, String modelID) throws Util.HttpRequestException, InterruptedException {
-        for (int i=0; i <= requestMaxRetries; i++) {
+        for (int i = 0; i <= requestMaxRetries; i++) {
             try {
                 ModelData model = modelHandler.getModel(modelID);
                 int colsHashCode = modelHandler.getColsHashCode(model.columns);
@@ -242,5 +233,17 @@ public class Client extends BaseOperator {
         message.addInput("data");
         message.addInput("meta_data");
         return message;
+    }
+
+    public static class JobNotDoneException extends Exception {
+        public JobNotDoneException(String errorMessage) {
+            super(errorMessage);
+        }
+    }
+
+    public static class JobFailedException extends Exception {
+        public JobFailedException(String errorMessage) {
+            super(errorMessage);
+        }
     }
 }
