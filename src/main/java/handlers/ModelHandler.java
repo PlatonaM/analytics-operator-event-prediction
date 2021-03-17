@@ -23,7 +23,10 @@ import com.google.gson.reflect.TypeToken;
 import models.ModelData;
 import util.Util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 
 public class ModelHandler {
@@ -46,7 +49,8 @@ public class ModelHandler {
         String reqData = "{\"service_id\":\"" + serviceID + "\",\"ml_config\":" + mlConfig + "}";
         Map<String, List<String>> respData = new Gson().fromJson(
                 Util.httpPost(trainerURL, "application/json", reqData),
-                new TypeToken<Map<String, List<String>>>(){}.getType()
+                new TypeToken<Map<String, List<String>>>() {
+                }.getType()
         );
         List<List<String>> modelIDs = new ArrayList<>();
         modelIDs.add(respData.get("available"));
