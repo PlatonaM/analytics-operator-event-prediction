@@ -9,6 +9,33 @@ import java.util.logging.*;
 
 public class Logger {
 
+    static private final Map<String, Level> levelMap;
+    static private Level loggerLevel;
+    static private Handler loggerHandler;
+
+    static {
+        levelMap = new HashMap<>();
+        levelMap.put("error", Level.SEVERE);
+        levelMap.put("warning", Level.WARNING);
+        levelMap.put("info", Level.INFO);
+        levelMap.put("debug", Level.FINEST);
+    }
+
+    static public void setup(String level) {
+        loggerHandler = new ConsoleHandler();
+        loggerHandler.setFormatter(new MsgFormatter());
+        loggerHandler.setLevel(levelMap.get(level));
+        loggerLevel = levelMap.get(level);
+    }
+
+    static public java.util.logging.Logger getLogger(String name) {
+        java.util.logging.Logger logger = java.util.logging.Logger.getLogger(name);
+        logger.addHandler(loggerHandler);
+        logger.setLevel(loggerLevel);
+        logger.setUseParentHandlers(false);
+        return logger;
+    }
+
     static class MsgFormatter extends Formatter {
 
         @Override
@@ -36,32 +63,5 @@ public class Logger {
             Date resultdate = new Date(millisecs);
             return date_format.format(resultdate);
         }
-    }
-
-    static private final Map<String, Level> levelMap;
-    static {
-        levelMap = new HashMap<>();
-        levelMap.put("error", Level.SEVERE);
-        levelMap.put("warning", Level.WARNING);
-        levelMap.put("info", Level.INFO);
-        levelMap.put("debug", Level.FINEST);
-    }
-
-    static private Level loggerLevel;
-    static private Handler loggerHandler;
-
-    static public void setup(String level) {
-        loggerHandler = new ConsoleHandler();
-        loggerHandler.setFormatter(new MsgFormatter());
-        loggerHandler.setLevel(levelMap.get(level));
-        loggerLevel = levelMap.get(level);
-    }
-
-    static public java.util.logging.Logger getLogger(String name) {
-        java.util.logging.Logger logger = java.util.logging.Logger.getLogger(name);
-        logger.addHandler(loggerHandler);
-        logger.setLevel(loggerLevel);
-        logger.setUseParentHandlers(false);
-        return logger;
     }
 }
