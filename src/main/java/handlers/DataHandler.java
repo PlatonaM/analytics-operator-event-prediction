@@ -66,13 +66,13 @@ public class DataHandler {
     private List<String> getHeader(List<Map<String, ?>> data, List<String> safeColumns) {
         List<String> columns = new ArrayList<>(data.get(0).keySet());
         if (columns.retainAll(safeColumns)) {
-            logger.warning("removed unknown columns");
+            logger.warning("removed unknown features");
         }
         List<String> missingCols = new ArrayList<>(safeColumns);
         missingCols.removeAll(columns);
         if (!missingCols.isEmpty()) {
             columns.addAll(missingCols);
-            logger.finest("added missing columns");
+            logger.warning("added missing features");
         }
         return buildHeader(columns);
     }
