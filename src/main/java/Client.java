@@ -112,7 +112,19 @@ public class Client extends BaseOperator {
                 data = new Gson().fromJson(message.getInput("data").getString(), new TypeToken<LinkedList<Map<String, ?>>>(){}.getType());
             }
             logger.info("received message containing " + data.size() + " data points ...");
-            List<List<String>> modelIDs = modelHandler.getModelIDs((String) inputSource.get("name"));
+            List<List<String>> modelIDs = new ArrayList<>();
+            for (int i=0; i <= requestMaxRetries; i++) {
+                try {
+                    modelIDs.addAll(modelHandler.getModelIDs((String) inputSource.get("name")));
+                    break;
+                } catch (Util.HttpRequestException e) {
+                    if (i == requestMaxRetries) {
+                        logger.severe("retrieving model IDs failed");
+                        throw e;
+                    }
+                    TimeUnit.SECONDS.sleep(requestPollDelay);
+                }
+            }
             Map<Integer, List<ModelData>> models = new HashMap<>();
             for (String modelID: modelIDs.get(0)) {
                 getAndStoreModel(models, modelID);
