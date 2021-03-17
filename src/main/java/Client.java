@@ -154,7 +154,11 @@ public class Client extends BaseOperator {
                         logger.fine("created job " + jobID);
                         for (int y=0; y <= requestMaxRetries; y++) {
                             try {
-                                addDataToJob(dataHandler.getCSV(data, models.get(key).get(0).columns), jobID);
+                                if (fixFeatures) {
+                                    addDataToJob(dataHandler.getCSV(data, models.get(key).get(0).columns), jobID);
+                                } else {
+                                    addDataToJob(dataHandler.getCSV(data), jobID);
+                                }
                                 logger.fine("added data to job " + jobID);
                                 for (int x=0; x <= requestMaxRetries; x++) {
                                     try {
