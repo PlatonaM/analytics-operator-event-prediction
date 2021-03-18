@@ -87,6 +87,27 @@ public class Client extends BaseOperator {
         }
     }
 
+    private void getAndStoreModel(Map<Integer, List<ModelData>> models, String modelID) throws HttpRequest.HttpRequestException, InterruptedException {
+        for (int i = 0; i <= requestMaxRetries; i++) {
+            try {
+                ModelData model = modelHandler.getModel(modelID);
+                int colsHashCode = modelHandler.getColsHashCode(model.columns);
+                if (!models.containsKey(colsHashCode)) {
+                    models.put(colsHashCode, new ArrayList<>());
+                }
+                models.get(colsHashCode).add(model);
+                logger.fine("retrieved model " + model.id + " (" + model.created + ")");
+                break;
+            } catch (HttpRequest.HttpRequestException e) {
+                if (i == requestMaxRetries) {
+                    logger.severe("retrieving model " + modelID + " failed");
+                    throw e;
+                }
+                TimeUnit.SECONDS.sleep(requestPollDelay);
+            }
+        }
+    }
+
     @Override
     public void run(Message message) {
         Map<String, ?> metaData;
@@ -210,27 +231,6 @@ public class Client extends BaseOperator {
         } catch (Throwable t) {
             logger.severe("error handling message:");
             t.printStackTrace();
-        }
-    }
-
-    private void getAndStoreModel(Map<Integer, List<ModelData>> models, String modelID) throws HttpRequest.HttpRequestException, InterruptedException {
-        for (int i = 0; i <= requestMaxRetries; i++) {
-            try {
-                ModelData model = modelHandler.getModel(modelID);
-                int colsHashCode = modelHandler.getColsHashCode(model.columns);
-                if (!models.containsKey(colsHashCode)) {
-                    models.put(colsHashCode, new ArrayList<>());
-                }
-                models.get(colsHashCode).add(model);
-                logger.fine("retrieved model " + model.id + " (" + model.created + ")");
-                break;
-            } catch (HttpRequest.HttpRequestException e) {
-                if (i == requestMaxRetries) {
-                    logger.severe("retrieving model " + modelID + " failed");
-                    throw e;
-                }
-                TimeUnit.SECONDS.sleep(requestPollDelay);
-            }
         }
     }
 
