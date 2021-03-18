@@ -92,14 +92,14 @@ public class DataHandler {
         return lineMap;
     }
 
-    private String buildCSV(List<Map<String, Object>> data, List<String> header) {
+    private String buildCSV(List<Map<String, Object>> data, List<String> header, Map<?, ?> defaultValues) {
         Map<Integer, String> lineMap = getLineMap(header);
         int lineLength = header.size();
         StringBuilder csvData = new StringBuilder(String.join(delimiter, header) + "\n");
         for (Map<String, Object> item : data) {
             StringBuilder line = new StringBuilder();
             for (int i = 0; i < lineLength; i++) {
-                line.append(getValue(item.get(lineMap.get(i))));
+                line.append(getValue(item.get(lineMap.get(i)), defaultValues.get(lineMap.get(i))));
                 if (i < lineLength - 1) {
                     line.append(delimiter);
                 }
@@ -110,12 +110,12 @@ public class DataHandler {
         return csvData.toString();
     }
 
-    public String getCSV(List<Map<String, Object>> data) {
-        return buildCSV(data, getHeader(data));
+    public String getCSV(List<Map<String, Object>> data, Map<?, ?> defaultValues) {
+        return buildCSV(data, getHeader(data), defaultValues);
     }
 
-    public String getCSV(List<Map<String, Object>> data, List<String> safeColumns) {
-        return buildCSV(data, getHeader(data, safeColumns));
+    public String getCSV(List<Map<String, Object>> data, Map<?, ?> defaultValues, List<String> safeColumns) {
+        return buildCSV(data, getHeader(data, safeColumns), defaultValues);
     }
 
     public String getTimeField() {
