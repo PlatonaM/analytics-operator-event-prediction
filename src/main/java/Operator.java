@@ -17,10 +17,11 @@
 
 import handlers.DataHandler;
 import handlers.ModelHandler;
+import org.infai.ses.platonam.util.Logger;
 import org.infai.ses.senergy.operators.Config;
 import org.infai.ses.senergy.operators.Stream;
 import org.infai.ses.senergy.utils.ConfigProvider;
-import util.Logger;
+
 
 public class Operator {
 
