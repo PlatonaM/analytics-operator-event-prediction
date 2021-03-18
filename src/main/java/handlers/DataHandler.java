@@ -42,12 +42,16 @@ public class DataHandler {
         this.delimiter = delimiter;
     }
 
-    private String getValue(Object obj) {
-        if (obj instanceof Number) {
-            return String.valueOf(obj).replaceAll("\\.0+$", "");
-        } else if (obj instanceof String) {
-            return (String) obj;
+    private String getValue(Object obj, Object defaultValue) {
+        if (obj != null) {
+            if (obj instanceof String) {
+                return (String) obj;
+            }
+            return String.valueOf(obj);
         } else {
+            if (defaultValue != null) {
+                return String.valueOf(defaultValue);
+            }
             return emptyPlaceholder;
         }
     }
