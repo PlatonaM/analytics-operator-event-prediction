@@ -120,7 +120,7 @@ public class Client extends BaseOperator {
         try {
             metaData = typeSafeMapFromJson(message.getInput("meta_data").getString());
             List<?> inputSources = (ArrayList<?>) metaData.get("input_sources");
-            Map<?, ?> defaultValues = (Map<?, ?>) metaData.get("default_values");
+            Map<?, ?> defaultValues = (Map<?, ?>) metaData.getOrDefault("default_values", new HashMap<>());
             if (inputSources == null) {
                 throw new RuntimeException("missing input source");
             }
