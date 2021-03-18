@@ -120,6 +120,7 @@ public class Client extends BaseOperator {
         try {
             metaData = typeSafeMapFromJson(message.getInput("meta_data").getString());
             List<?> inputSources = (ArrayList<?>) metaData.get("input_sources");
+            Map<?, ?> defaultValues = (Map<?, ?>) metaData.get("default_values");
             if (inputSources == null) {
                 throw new RuntimeException("missing input source");
             }
@@ -174,9 +175,9 @@ public class Client extends BaseOperator {
                         for (int y = 0; y <= requestMaxRetries; y++) {
                             try {
                                 if (fixFeatures) {
-                                    addDataToJob(dataHandler.getCSV(data, models.get(key).get(0).columns), jobID);
+                                    addDataToJob(dataHandler.getCSV(data, defaultValues, models.get(key).get(0).columns), jobID);
                                 } else {
-                                    addDataToJob(dataHandler.getCSV(data), jobID);
+                                    addDataToJob(dataHandler.getCSV(data, defaultValues), jobID);
                                 }
                                 logger.fine("added data to job " + jobID);
                                 for (int x = 0; x <= requestMaxRetries; x++) {
