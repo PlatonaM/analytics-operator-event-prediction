@@ -22,18 +22,23 @@ import handlers.DataHandler;
 import handlers.ModelHandler;
 import models.JobData;
 import models.ModelData;
+import org.infai.ses.platonam.util.HttpRequest;
 import org.infai.ses.senergy.operators.BaseOperator;
 import org.infai.ses.senergy.operators.Message;
-import util.Util;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import static org.infai.ses.platonam.util.Compression.decompress;
+import static org.infai.ses.platonam.util.HttpRequest.httpGet;
+import static org.infai.ses.platonam.util.HttpRequest.httpPost;
+import static org.infai.ses.platonam.util.Logger.getLogger;
+
 
 public class Client extends BaseOperator {
 
-    private final static Logger logger = util.Logger.getLogger(Client.class.getName());
+    private final static Logger logger = getLogger(Client.class.getName());
     private final DataHandler dataHandler;
     private final ModelHandler modelHandler;
     private final String workerURL;
@@ -41,6 +46,7 @@ public class Client extends BaseOperator {
     private final long requestPollDelay;
     private final long requestMaxRetries;
     private final boolean fixFeatures;
+
     public Client(DataHandler dataHandler, ModelHandler modelHandler, String workerURL, boolean compressedInput, long requestPollDelay, long requestMaxRetries, boolean fixFeatures) {
         if (workerURL == null || workerURL.isBlank()) {
             throw new RuntimeException("invalid worker_url: " + workerURL);
@@ -54,22 +60,22 @@ public class Client extends BaseOperator {
         this.fixFeatures = fixFeatures;
     }
 
-    private String createJob(List<ModelData> models, String timeField) throws Util.HttpRequestException {
-        return Util.httpPost(
+    private String createJob(List<ModelData> models, String timeField) throws HttpRequest.HttpRequestException {
+        return httpPost(
                 workerURL,
                 "application/json",
                 new Gson().toJson(new JobData(timeField, true, models), JobData.class)
         );
     }
 
-    private void addDataToJob(String csvData, String jobID) throws Util.HttpRequestException {
-        Util.httpPost(workerURL + "/" + jobID, "text/csv", csvData);
+    private void addDataToJob(String csvData, String jobID) throws HttpRequest.HttpRequestException {
+        httpPost(workerURL + "/" + jobID, "text/csv", csvData);
     }
 
-    private JobData getJobResult(String jobID) throws Util.HttpRequestException, JobFailedException, JobNotDoneException {
+    private JobData getJobResult(String jobID) throws HttpRequest.HttpRequestException, JobFailedException, JobNotDoneException {
         JobData jobRes;
         jobRes = new Gson().fromJson(
-                Util.httpGet(workerURL + "/" + jobID, "application/json"),
+                httpGet(workerURL + "/" + jobID, "application/json"),
                 JobData.class
         );
         if (jobRes.status.equals("finished")) {
@@ -98,7 +104,7 @@ public class Client extends BaseOperator {
             }
             inputSource = (LinkedTreeMap<?, ?>) inputSources.get(0);
             if (compressedInput) {
-                data = new Gson().fromJson(Util.decompress(message.getInput("data").getString()), new TypeToken<LinkedList<Map<String, ?>>>() {
+                data = new Gson().fromJson(decompress(message.getInput("data").getString()), new TypeToken<LinkedList<Map<String, ?>>>() {
                 }.getType());
             } else {
                 data = new Gson().fromJson(message.getInput("data").getString(), new TypeToken<LinkedList<Map<String, ?>>>() {
@@ -111,7 +117,7 @@ public class Client extends BaseOperator {
                 try {
                     modelIDs.addAll(modelHandler.getModelIDs((String) inputSource.get("name")));
                     break;
-                } catch (Util.HttpRequestException e) {
+                } catch (HttpRequest.HttpRequestException e) {
                     if (i == requestMaxRetries) {
                         logger.severe("retrieving model IDs failed");
                         throw e;
@@ -162,7 +168,7 @@ public class Client extends BaseOperator {
                                             predictions.get(resKey).addAll(jobResult.result.get(resKey));
                                         }
                                         break;
-                                    } catch (Util.HttpRequestException e) {
+                                    } catch (HttpRequest.HttpRequestException e) {
                                         if (x == requestMaxRetries) {
                                             logger.severe("retrieved results from job " + jobID + " failed");
                                             throw e;
@@ -180,7 +186,7 @@ public class Client extends BaseOperator {
                                     }
                                 }
                                 break;
-                            } catch (Util.HttpRequestException e) {
+                            } catch (HttpRequest.HttpRequestException e) {
                                 if (y == requestMaxRetries) {
                                     logger.severe("adding data to job " + jobID + " failed");
                                     throw e;
@@ -189,7 +195,7 @@ public class Client extends BaseOperator {
                             }
                         }
                         break;
-                    } catch (Util.HttpRequestException e) {
+                    } catch (HttpRequest.HttpRequestException e) {
                         if (i == requestMaxRetries) {
                             logger.severe("creating job failed");
                             throw e;
@@ -199,7 +205,7 @@ public class Client extends BaseOperator {
                 }
             }
             logger.info("outputting results message ...");
-        } catch (Util.HttpRequestException | JobFailedException | JobNotDoneException e) {
+        } catch (HttpRequest.HttpRequestException | JobFailedException | JobNotDoneException e) {
             logger.severe("error handling message");
         } catch (Throwable t) {
             logger.severe("error handling message:");
@@ -207,7 +213,7 @@ public class Client extends BaseOperator {
         }
     }
 
-    private void getAndStoreModel(Map<Integer, List<ModelData>> models, String modelID) throws Util.HttpRequestException, InterruptedException {
+    private void getAndStoreModel(Map<Integer, List<ModelData>> models, String modelID) throws HttpRequest.HttpRequestException, InterruptedException {
         for (int i = 0; i <= requestMaxRetries; i++) {
             try {
                 ModelData model = modelHandler.getModel(modelID);
@@ -218,7 +224,7 @@ public class Client extends BaseOperator {
                 models.get(colsHashCode).add(model);
                 logger.fine("retrieved model " + model.id + " (" + model.created + ")");
                 break;
-            } catch (Util.HttpRequestException e) {
+            } catch (HttpRequest.HttpRequestException e) {
                 if (i == requestMaxRetries) {
                     logger.severe("retrieving model " + modelID + " failed");
                     throw e;
