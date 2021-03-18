@@ -17,7 +17,6 @@
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
-import com.google.gson.reflect.TypeToken;
 import handlers.DataHandler;
 import handlers.ModelHandler;
 import models.JobData;
@@ -26,13 +25,18 @@ import org.infai.ses.platonam.util.HttpRequest;
 import org.infai.ses.senergy.operators.BaseOperator;
 import org.infai.ses.senergy.operators.Message;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static org.infai.ses.platonam.util.Compression.decompress;
 import static org.infai.ses.platonam.util.HttpRequest.httpGet;
 import static org.infai.ses.platonam.util.HttpRequest.httpPost;
+import static org.infai.ses.platonam.util.Json.typeSafeMapFromJson;
+import static org.infai.ses.platonam.util.Json.typeSafeMapListFromJson;
 import static org.infai.ses.platonam.util.Logger.getLogger;
 
 
@@ -110,12 +114,11 @@ public class Client extends BaseOperator {
 
     @Override
     public void run(Message message) {
-        Map<String, ?> metaData;
-        List<Map<String, ?>> data;
+        Map<String, Object> metaData;
+        List<Map<String, Object>> data;
         Map<?, ?> inputSource;
         try {
-            metaData = new Gson().fromJson(message.getInput("meta_data").getString(), new TypeToken<Map<String, ?>>() {
-            }.getType());
+            metaData = typeSafeMapFromJson(message.getInput("meta_data").getString());
             List<?> inputSources = (ArrayList<?>) metaData.get("input_sources");
             if (inputSources == null) {
                 throw new RuntimeException("missing input source");
@@ -125,11 +128,9 @@ public class Client extends BaseOperator {
             }
             inputSource = (LinkedTreeMap<?, ?>) inputSources.get(0);
             if (compressedInput) {
-                data = new Gson().fromJson(decompress(message.getInput("data").getString()), new TypeToken<LinkedList<Map<String, ?>>>() {
-                }.getType());
+                data = typeSafeMapListFromJson(decompress(message.getInput("data").getString()));
             } else {
-                data = new Gson().fromJson(message.getInput("data").getString(), new TypeToken<LinkedList<Map<String, ?>>>() {
-                }.getType());
+                data = typeSafeMapListFromJson(message.getInput("data").getString());
             }
             logger.info("received message containing " + data.size() + " data points ...");
             logger.info("retrieving model IDs ...");
@@ -174,6 +175,7 @@ public class Client extends BaseOperator {
                             try {
                                 if (fixFeatures) {
                                     addDataToJob(dataHandler.getCSV(data, models.get(key).get(0).columns), jobID);
+//                                    message.output("data", dataHandler.getCSV(data, models.get(key).get(0).columns));
                                 } else {
                                     addDataToJob(dataHandler.getCSV(data), jobID);
                                 }
