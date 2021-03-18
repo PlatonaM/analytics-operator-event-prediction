@@ -61,11 +61,11 @@ public class DataHandler {
         return header;
     }
 
-    private List<String> getHeader(List<Map<String, ?>> data) {
+    private List<String> getHeader(List<Map<String, Object>> data) {
         return buildHeader(new ArrayList<>(data.get(0).keySet()));
     }
 
-    private List<String> getHeader(List<Map<String, ?>> data, List<String> safeColumns) {
+    private List<String> getHeader(List<Map<String, Object>> data, List<String> safeColumns) {
         List<String> columns = new ArrayList<>(data.get(0).keySet());
         if (columns.retainAll(safeColumns)) {
             logger.warning("removed unknown features");
@@ -88,11 +88,11 @@ public class DataHandler {
         return lineMap;
     }
 
-    private String buildCSV(List<Map<String, ?>> data, List<String> header) {
+    private String buildCSV(List<Map<String, Object>> data, List<String> header) {
         Map<Integer, String> lineMap = getLineMap(header);
         int lineLength = header.size();
         StringBuilder csvData = new StringBuilder(String.join(delimiter, header) + "\n");
-        for (Map<String, ?> item : data) {
+        for (Map<String, Object> item : data) {
             StringBuilder line = new StringBuilder();
             for (int i = 0; i < lineLength; i++) {
                 line.append(getValue(item.get(lineMap.get(i))));
@@ -106,11 +106,11 @@ public class DataHandler {
         return csvData.toString();
     }
 
-    public String getCSV(List<Map<String, ?>> data) {
+    public String getCSV(List<Map<String, Object>> data) {
         return buildCSV(data, getHeader(data));
     }
 
-    public String getCSV(List<Map<String, ?>> data, List<String> safeColumns) {
+    public String getCSV(List<Map<String, Object>> data, List<String> safeColumns) {
         return buildCSV(data, getHeader(data, safeColumns));
     }
 
