@@ -21,12 +21,15 @@ package handlers;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import models.ModelData;
-import util.Util;
+import org.infai.ses.platonam.util.HttpRequest;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import static org.infai.ses.platonam.util.HttpRequest.httpGet;
+import static org.infai.ses.platonam.util.HttpRequest.httpPost;
 
 
 public class ModelHandler {
@@ -45,10 +48,10 @@ public class ModelHandler {
         this.mlConfig = mlConfig;
     }
 
-    public List<List<String>> getModelIDs(String serviceID) throws Util.HttpRequestException {
+    public List<List<String>> getModelIDs(String serviceID) throws HttpRequest.HttpRequestException {
         String reqData = "{\"service_id\":\"" + serviceID + "\",\"ml_config\":" + mlConfig + "}";
         Map<String, List<String>> respData = new Gson().fromJson(
-                Util.httpPost(trainerURL, "application/json", reqData),
+                httpPost(trainerURL, "application/json", reqData),
                 new TypeToken<Map<String, List<String>>>() {
                 }.getType()
         );
@@ -58,9 +61,9 @@ public class ModelHandler {
         return modelIDs;
     }
 
-    public ModelData getModel(String modelID) throws Util.HttpRequestException {
+    public ModelData getModel(String modelID) throws HttpRequest.HttpRequestException {
         return new Gson().fromJson(
-                Util.httpGet(trainerURL + "/" + modelID, "application/json"),
+                httpGet(trainerURL + "/" + modelID, "application/json"),
                 ModelData.class
         );
     }
