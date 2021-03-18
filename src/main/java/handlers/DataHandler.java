@@ -20,10 +20,12 @@ package handlers;
 import java.util.*;
 import java.util.logging.Logger;
 
+import static org.infai.ses.platonam.util.Logger.getLogger;
+
 
 public class DataHandler {
 
-    private final static Logger logger = util.Logger.getLogger(DataHandler.class.getName());
+    private final static Logger logger = getLogger(DataHandler.class.getName());
     private final String timeField;
     private final String emptyPlaceholder;
     private final String delimiter;
