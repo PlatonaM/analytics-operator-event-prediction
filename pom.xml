@@ -71,6 +71,11 @@
             <version>4c03fbf8238410bb3dec49c9debf7b7ec42ae1ac</version>
         </dependency>
         <dependency>
+            <groupId>com.github.PlatonaM</groupId>
+            <artifactId>util-analytics-operator</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
             <version>5.7.1</version>
