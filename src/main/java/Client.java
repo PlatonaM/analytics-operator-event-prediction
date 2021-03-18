@@ -175,7 +175,6 @@ public class Client extends BaseOperator {
                             try {
                                 if (fixFeatures) {
                                     addDataToJob(dataHandler.getCSV(data, models.get(key).get(0).columns), jobID);
-//                                    message.output("data", dataHandler.getCSV(data, models.get(key).get(0).columns));
                                 } else {
                                     addDataToJob(dataHandler.getCSV(data), jobID);
                                 }
