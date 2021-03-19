@@ -118,5 +118,10 @@ public class DataHandler {
         return buildCSV(data, getHeader(data, safeColumns), defaultValues);
     }
 
+    public List<String> getStartAndEndTimestamp(List<Map<String, Object>> data) {
+        List<String> timestamps = new ArrayList<>();
+        timestamps.add((String) data.get(0).get(timeField));
+        timestamps.add((String) data.get(data.size() - 1).get(timeField));
+        return timestamps;
     }
 }
