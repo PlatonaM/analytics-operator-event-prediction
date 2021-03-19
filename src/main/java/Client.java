@@ -213,6 +213,12 @@ public class Client extends BaseOperator {
                     predictions.get(resKey).addAll(jobResult.get(resKey));
                 }
             }
+            List<String> startAndEndTime = dataHandler.getStartAndEndTimestamp(data);
+            message.output("start_time", startAndEndTime.get(0));
+            message.output("end_time", startAndEndTime.get(1));
+            message.output("id", inputSource.get("id"));
+            message.output("name", inputSource.get("name"));
+            message.output("predictions", predictions);
         } catch (HttpRequest.HttpRequestException | JobHandler.JobFailedException | JobHandler.JobNotDoneException e) {
             logger.severe("error handling message");
         } catch (Throwable t) {
