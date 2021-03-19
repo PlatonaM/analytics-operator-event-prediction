@@ -118,7 +118,5 @@ public class DataHandler {
         return buildCSV(data, getHeader(data, safeColumns), defaultValues);
     }
 
-    public String getTimeField() {
-        return timeField;
     }
 }
