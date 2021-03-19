@@ -15,7 +15,6 @@
  */
 
 
-import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import handlers.DataHandler;
 import handlers.JobHandler;
@@ -34,8 +33,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static org.infai.ses.platonam.util.Compression.decompress;
-import static org.infai.ses.platonam.util.HttpRequest.httpGet;
-import static org.infai.ses.platonam.util.HttpRequest.httpPost;
 import static org.infai.ses.platonam.util.Json.typeSafeMapFromJson;
 import static org.infai.ses.platonam.util.Json.typeSafeMapListFromJson;
 import static org.infai.ses.platonam.util.Logger.getLogger;
@@ -46,53 +43,20 @@ public class Client extends BaseOperator {
     private final static Logger logger = getLogger(Client.class.getName());
     private final DataHandler dataHandler;
     private final ModelHandler modelHandler;
-    private final String workerURL;
     private final JobHandler jobHandler;
     private final boolean compressedInput;
     private final long requestPollDelay;
     private final long requestMaxRetries;
     private final boolean fixFeatures;
 
-    public Client(DataHandler dataHandler, ModelHandler modelHandler, String workerURL, boolean compressedInput, long requestPollDelay, long requestMaxRetries, boolean fixFeatures) {
-        if (workerURL == null || workerURL.isBlank()) {
-            throw new RuntimeException("invalid worker_url: " + workerURL);
-        }
     public Client(DataHandler dataHandler, ModelHandler modelHandler, JobHandler jobHandler, boolean compressedInput, long requestPollDelay, long requestMaxRetries, boolean fixFeatures) {
         this.dataHandler = dataHandler;
         this.modelHandler = modelHandler;
-        this.workerURL = workerURL;
         this.jobHandler = jobHandler;
         this.compressedInput = compressedInput;
         this.requestPollDelay = requestPollDelay;
         this.requestMaxRetries = requestMaxRetries;
         this.fixFeatures = fixFeatures;
-    }
-
-    private String createJob(List<ModelData> models, String timeField) throws HttpRequest.HttpRequestException {
-        return httpPost(
-                workerURL,
-                "application/json",
-                new Gson().toJson(new JobData(timeField, true, models), JobData.class)
-        );
-    }
-
-    private void addDataToJob(String csvData, String jobID) throws HttpRequest.HttpRequestException {
-        httpPost(workerURL + "/" + jobID, "text/csv", csvData);
-    }
-
-    private JobData getJobResult(String jobID) throws HttpRequest.HttpRequestException, JobFailedException, JobNotDoneException {
-        JobData jobRes;
-        jobRes = new Gson().fromJson(
-                httpGet(workerURL + "/" + jobID, "application/json"),
-                JobData.class
-        );
-        if (jobRes.status.equals("finished")) {
-            return jobRes;
-        } else if (jobRes.status.equals("failed")) {
-            throw new JobFailedException("worker reason: " + jobRes.reason);
-        } else {
-            throw new JobNotDoneException(jobRes.status);
-        }
     }
 
     private void getAndStoreModel(Map<Integer, List<ModelData>> models, String modelID) throws HttpRequest.HttpRequestException, InterruptedException {
@@ -114,6 +78,68 @@ public class Client extends BaseOperator {
                 TimeUnit.SECONDS.sleep(requestPollDelay);
             }
         }
+    }
+
+    private String createJob(List<ModelData> models) throws InterruptedException, HttpRequest.HttpRequestException {
+        String jobID;
+        for (int i = 0; i <= requestMaxRetries; i++) {
+            try {
+                jobID = jobHandler.createJob(models);
+                logger.fine("created job " + jobID);
+                return jobID;
+            } catch (HttpRequest.HttpRequestException e) {
+                if (i == requestMaxRetries) {
+                    logger.severe("creating job failed");
+                    throw e;
+                }
+                TimeUnit.SECONDS.sleep(requestPollDelay);
+            }
+        }
+        throw new InterruptedException();
+    }
+
+    private void addDataToJob(String csvData, String jobID) throws InterruptedException, HttpRequest.HttpRequestException {
+        for (int i = 0; i <= requestMaxRetries; i++) {
+            try {
+                jobHandler.addDataToJob(csvData, jobID);
+                logger.fine("added data to job " + jobID);
+                break;
+            } catch (HttpRequest.HttpRequestException e) {
+                if (i == requestMaxRetries) {
+                    logger.severe("adding data to job " + jobID + " failed");
+                    throw e;
+                }
+                TimeUnit.SECONDS.sleep(requestPollDelay);
+            }
+        }
+    }
+
+    private JobData getJobResult(String jobID) throws InterruptedException, HttpRequest.HttpRequestException, JobHandler.JobNotDoneException, JobHandler.JobFailedException {
+        JobData jobData;
+        for (int i = 0; i <= requestMaxRetries; i++) {
+            try {
+                jobData = jobHandler.getJobResult(jobID);
+                logger.fine("retrieved results from job " + jobID);
+                return jobData;
+            } catch (HttpRequest.HttpRequestException e) {
+                if (i == requestMaxRetries) {
+                    logger.severe("retrieving results from job " + jobID + " failed");
+                    throw e;
+                }
+                TimeUnit.SECONDS.sleep(requestPollDelay);
+            } catch (JobHandler.JobNotDoneException e) {
+                if (i == requestMaxRetries) {
+                    logger.severe("job " + jobID + " took to long - try changing 'request_poll_delay' or 'request_max_retries'");
+                    throw e;
+                }
+                logger.fine("waiting for job " + jobID + " to complete");
+                TimeUnit.SECONDS.sleep(requestPollDelay);
+            } catch (JobHandler.JobFailedException e) {
+                logger.severe("job " + jobID + " failed - " + e.getMessage());
+                throw e;
+            }
+        }
+        throw new InterruptedException();
     }
 
     @Override
@@ -164,75 +190,34 @@ public class Client extends BaseOperator {
                     getAndStoreModel(models, modelID);
                 }
             }
-            Map<String, List<Map<String, Number>>> predictions = new HashMap<>();
             if (models.keySet().size() > 1) {
                 logger.warning("using models with diverging feature sets");
                 logger.info("starting " + models.keySet().size() + " jobs ...");
             } else {
                 logger.info("starting job ...");
             }
+            Map<String, List<Map<String, Number>>> predictions = new HashMap<>();
             for (int key : models.keySet()) {
-                for (int i = 0; i <= requestMaxRetries; i++) {
-                    try {
-                        String jobID = createJob(models.get(key), dataHandler.getTimeField());
-                        logger.fine("created job " + jobID);
-                        for (int y = 0; y <= requestMaxRetries; y++) {
-                            try {
-                                if (fixFeatures) {
-                                    addDataToJob(dataHandler.getCSV(data, defaultValues, models.get(key).get(0).columns), jobID);
-                                } else {
-                                    addDataToJob(dataHandler.getCSV(data, defaultValues), jobID);
-                                }
-                                logger.fine("added data to job " + jobID);
-                                for (int x = 0; x <= requestMaxRetries; x++) {
-                                    try {
-                                        JobData jobResult = getJobResult(jobID);
-                                        logger.fine("retrieved results from job " + jobID);
-                                        for (String resKey : jobResult.result.keySet()) {
-                                            if (!predictions.containsKey(resKey)) {
-                                                predictions.put(resKey, new ArrayList<>());
-                                            }
-                                            predictions.get(resKey).addAll(jobResult.result.get(resKey));
-                                        }
-                                        break;
-                                    } catch (HttpRequest.HttpRequestException e) {
-                                        if (x == requestMaxRetries) {
-                                            logger.severe("retrieved results from job " + jobID + " failed");
-                                            throw e;
-                                        }
-                                        TimeUnit.SECONDS.sleep(requestPollDelay);
-                                    } catch (JobNotDoneException e) {
-                                        if (x == requestMaxRetries) {
-                                            logger.severe("job " + jobID + " took to long - try changing 'request_poll_delay' or 'request_max_retries'");
-                                            throw e;
-                                        }
-                                        TimeUnit.SECONDS.sleep(requestPollDelay);
-                                    } catch (JobFailedException e) {
-                                        logger.severe("job " + jobID + " failed - " + e.getMessage());
-                                        throw e;
-                                    }
-                                }
-                                break;
-                            } catch (HttpRequest.HttpRequestException e) {
-                                if (y == requestMaxRetries) {
-                                    logger.severe("adding data to job " + jobID + " failed");
-                                    throw e;
-                                }
-                                TimeUnit.SECONDS.sleep(requestPollDelay);
-                            }
-                        }
-                        break;
-                    } catch (HttpRequest.HttpRequestException e) {
-                        if (i == requestMaxRetries) {
-                            logger.severe("creating job failed");
-                            throw e;
-                        }
-                        TimeUnit.SECONDS.sleep(requestPollDelay);
+                String jobID = createJob(models.get(key));
+                String csvData;
+                if (fixFeatures) {
+                    csvData = dataHandler.getCSV(data, defaultValues, models.get(key).get(0).columns);
+//                    message.output("data", dataHandler.getCSV(data, defaultValues));
+                } else {
+                    csvData = dataHandler.getCSV(data, defaultValues);
+                }
+//                throw if csvData == null?
+                addDataToJob(csvData, jobID);
+                JobData jobResult = getJobResult(jobID);
+                for (String resKey : jobResult.result.keySet()) {
+                    if (!predictions.containsKey(resKey)) {
+                        predictions.put(resKey, new ArrayList<>());
                     }
+                    predictions.get(resKey).addAll(jobResult.result.get(resKey));
                 }
             }
             logger.info("outputting results message ...");
-        } catch (HttpRequest.HttpRequestException | JobFailedException | JobNotDoneException e) {
+        } catch (HttpRequest.HttpRequestException | JobHandler.JobFailedException | JobHandler.JobNotDoneException e) {
             logger.severe("error handling message");
         } catch (Throwable t) {
             logger.severe("error handling message:");
@@ -245,17 +230,5 @@ public class Client extends BaseOperator {
         message.addInput("data");
         message.addInput("meta_data");
         return message;
-    }
-
-    public static class JobNotDoneException extends Exception {
-        public JobNotDoneException(String errorMessage) {
-            super(errorMessage);
-        }
-    }
-
-    public static class JobFailedException extends Exception {
-        public JobFailedException(String errorMessage) {
-            super(errorMessage);
-        }
     }
 }
