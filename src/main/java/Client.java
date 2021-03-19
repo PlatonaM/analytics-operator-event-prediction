@@ -18,6 +18,7 @@
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import handlers.DataHandler;
+import handlers.JobHandler;
 import handlers.ModelHandler;
 import models.JobData;
 import models.ModelData;
@@ -46,6 +47,7 @@ public class Client extends BaseOperator {
     private final DataHandler dataHandler;
     private final ModelHandler modelHandler;
     private final String workerURL;
+    private final JobHandler jobHandler;
     private final boolean compressedInput;
     private final long requestPollDelay;
     private final long requestMaxRetries;
@@ -55,9 +57,11 @@ public class Client extends BaseOperator {
         if (workerURL == null || workerURL.isBlank()) {
             throw new RuntimeException("invalid worker_url: " + workerURL);
         }
+    public Client(DataHandler dataHandler, ModelHandler modelHandler, JobHandler jobHandler, boolean compressedInput, long requestPollDelay, long requestMaxRetries, boolean fixFeatures) {
         this.dataHandler = dataHandler;
         this.modelHandler = modelHandler;
         this.workerURL = workerURL;
+        this.jobHandler = jobHandler;
         this.compressedInput = compressedInput;
         this.requestPollDelay = requestPollDelay;
         this.requestMaxRetries = requestMaxRetries;

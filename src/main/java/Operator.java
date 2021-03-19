@@ -16,6 +16,7 @@
 
 
 import handlers.DataHandler;
+import handlers.JobHandler;
 import handlers.ModelHandler;
 import org.infai.ses.platonam.util.Logger;
 import org.infai.ses.senergy.operators.Config;
@@ -37,10 +38,14 @@ public class Operator {
                 config.getConfigValue("trainer_url", null),
                 config.getConfigValue("ml_config", null)
         );
+        JobHandler jobHandler = new JobHandler(
+                config.getConfigValue("worker_url", null),
+                config.getConfigValue("time_field", null)
+        );
         Client client = new Client(
                 dataHandler,
                 modelHandler,
-                config.getConfigValue("worker_url", null),
+                jobHandler,
                 Boolean.parseBoolean(config.getConfigValue("compressed_input", "false")),
                 Long.parseLong(config.getConfigValue("request_poll_delay", "15")),
                 Long.parseLong(config.getConfigValue("request_max_retries", "240")),
