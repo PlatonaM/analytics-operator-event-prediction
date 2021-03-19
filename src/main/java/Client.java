@@ -19,7 +19,6 @@ import com.google.gson.internal.LinkedTreeMap;
 import handlers.DataHandler;
 import handlers.JobHandler;
 import handlers.ModelHandler;
-import models.JobData;
 import models.ModelData;
 import org.infai.ses.platonam.util.HttpRequest;
 import org.infai.ses.senergy.operators.BaseOperator;
@@ -114,13 +113,13 @@ public class Client extends BaseOperator {
         }
     }
 
-    private JobData getJobResult(String jobID) throws InterruptedException, HttpRequest.HttpRequestException, JobHandler.JobNotDoneException, JobHandler.JobFailedException {
-        JobData jobData;
+    private Map<String, List<Object>> getJobResult(String jobID) throws InterruptedException, HttpRequest.HttpRequestException, JobHandler.JobNotDoneException, JobHandler.JobFailedException {
+        Map<String, List<Object>> jobResult;
         for (int i = 0; i <= requestMaxRetries; i++) {
             try {
-                jobData = jobHandler.getJobResult(jobID);
+                jobResult = jobHandler.getJobResult(jobID);
                 logger.fine("retrieved results from job " + jobID);
-                return jobData;
+                return jobResult;
             } catch (HttpRequest.HttpRequestException e) {
                 if (i == requestMaxRetries) {
                     logger.severe("retrieving results from job " + jobID + " failed");
@@ -196,7 +195,7 @@ public class Client extends BaseOperator {
             } else {
                 logger.info("starting job ...");
             }
-            Map<String, List<Map<String, Number>>> predictions = new HashMap<>();
+            Map<String, List<Object>> predictions = new HashMap<>();
             for (int key : models.keySet()) {
                 String jobID = createJob(models.get(key));
                 String csvData;
@@ -206,12 +205,12 @@ public class Client extends BaseOperator {
                     csvData = dataHandler.getCSV(data, defaultValues);
                 }
                 addDataToJob(csvData, jobID);
-                JobData jobResult = getJobResult(jobID);
-                for (String resKey : jobResult.result.keySet()) {
+                Map<String, List<Object>> jobResult = getJobResult(jobID);
+                for (String resKey : jobResult.keySet()) {
                     if (!predictions.containsKey(resKey)) {
                         predictions.put(resKey, new ArrayList<>());
                     }
-                    predictions.get(resKey).addAll(jobResult.result.get(resKey));
+                    predictions.get(resKey).addAll(jobResult.get(resKey));
                 }
             }
             logger.info("outputting results message ...");
