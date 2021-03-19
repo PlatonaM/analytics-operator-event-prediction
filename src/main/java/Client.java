@@ -202,11 +202,9 @@ public class Client extends BaseOperator {
                 String csvData;
                 if (fixFeatures) {
                     csvData = dataHandler.getCSV(data, defaultValues, models.get(key).get(0).columns);
-//                    message.output("data", dataHandler.getCSV(data, defaultValues));
                 } else {
                     csvData = dataHandler.getCSV(data, defaultValues);
                 }
-//                throw if csvData == null?
                 addDataToJob(csvData, jobID);
                 JobData jobResult = getJobResult(jobID);
                 for (String resKey : jobResult.result.keySet()) {
