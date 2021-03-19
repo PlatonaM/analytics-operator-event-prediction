@@ -32,9 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static org.infai.ses.platonam.util.Compression.decompress;
-import static org.infai.ses.platonam.util.Json.typeSafeMapFromJson;
-import static org.infai.ses.platonam.util.Json.typeSafeMapListFromJson;
-import static org.infai.ses.platonam.util.Json.toJSON;
+import static org.infai.ses.platonam.util.Json.*;
 import static org.infai.ses.platonam.util.Logger.getLogger;
 
 
