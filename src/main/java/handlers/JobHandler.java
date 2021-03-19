@@ -18,15 +18,17 @@
 package handlers;
 
 
-import com.google.gson.Gson;
-import models.JobData;
 import models.ModelData;
 import org.infai.ses.platonam.util.HttpRequest;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.infai.ses.platonam.util.HttpRequest.httpGet;
 import static org.infai.ses.platonam.util.HttpRequest.httpPost;
+import static org.infai.ses.platonam.util.Json.toJSON;
+import static org.infai.ses.platonam.util.Json.typeSafeMapFromJson;
 
 
 public class JobHandler {
@@ -42,10 +44,14 @@ public class JobHandler {
     }
 
     public String createJob(List<ModelData> models) throws HttpRequest.HttpRequestException {
+        Map<String, Object> data = new HashMap<>();
+        data.put("time_field", timeField);
+        data.put("sorted_data", true);
+        data.put("models", models);
         return httpPost(
                 workerURL,
                 "application/json",
-                new Gson().toJson(new JobData(timeField, true, models), JobData.class)
+                toJSON(data)
         );
     }
 
@@ -53,18 +59,14 @@ public class JobHandler {
         httpPost(workerURL + "/" + jobID, "text/csv", csvData);
     }
 
-    public JobData getJobResult(String jobID) throws HttpRequest.HttpRequestException, JobFailedException, JobNotDoneException {
-        JobData jobRes;
-        jobRes = new Gson().fromJson(
-                httpGet(workerURL + "/" + jobID, "application/json"),
-                JobData.class
-        );
-        if (jobRes.status.equals("finished")) {
-            return jobRes;
-        } else if (jobRes.status.equals("failed")) {
-            throw new JobFailedException("worker reason: " + jobRes.reason);
+    public Map<String, List<Object>> getJobResult(String jobID) throws HttpRequest.HttpRequestException, JobFailedException, JobNotDoneException {
+        Map<String, Object> jobData = typeSafeMapFromJson(httpGet(workerURL + "/" + jobID, "application/json"));
+        if (jobData.get("status").equals("finished")) {
+            return (Map<String, List<Object>>) jobData.get("result");
+        } else if (jobData.get("status").equals("failed")) {
+            throw new JobFailedException("worker reason: " + jobData.get("reason"));
         } else {
-            throw new JobNotDoneException(jobRes.status);
+            throw new JobNotDoneException((String) jobData.get("status"));
         }
     }
 
