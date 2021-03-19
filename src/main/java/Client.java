@@ -132,7 +132,6 @@ public class Client extends BaseOperator {
                     logger.severe("job " + jobID + " took to long - try changing 'request_poll_delay' or 'request_max_retries'");
                     throw e;
                 }
-                logger.fine("waiting for job " + jobID + " to complete");
                 TimeUnit.SECONDS.sleep(requestPollDelay);
             } catch (JobHandler.JobFailedException e) {
                 logger.severe("job " + jobID + " failed - " + e.getMessage());
@@ -214,7 +213,6 @@ public class Client extends BaseOperator {
                     predictions.get(resKey).addAll(jobResult.get(resKey));
                 }
             }
-            logger.info("outputting results message ...");
         } catch (HttpRequest.HttpRequestException | JobHandler.JobFailedException | JobHandler.JobNotDoneException e) {
             logger.severe("error handling message");
         } catch (Throwable t) {
