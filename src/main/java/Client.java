@@ -115,6 +115,7 @@ public class Client extends BaseOperator {
 
     private Map<String, List<Object>> getJobResult(String jobID) throws InterruptedException, HttpRequest.HttpRequestException, JobHandler.JobNotDoneException, JobHandler.JobFailedException {
         Map<String, List<Object>> jobResult;
+        logger.fine("waiting for job " + jobID + " to complete ...");
         for (int i = 0; i <= requestMaxRetries; i++) {
             try {
                 jobResult = jobHandler.getJobResult(jobID);
