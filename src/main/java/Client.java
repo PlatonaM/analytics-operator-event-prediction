@@ -34,6 +34,7 @@ import java.util.logging.Logger;
 import static org.infai.ses.platonam.util.Compression.decompress;
 import static org.infai.ses.platonam.util.Json.typeSafeMapFromJson;
 import static org.infai.ses.platonam.util.Json.typeSafeMapListFromJson;
+import static org.infai.ses.platonam.util.Json.toJSON;
 import static org.infai.ses.platonam.util.Logger.getLogger;
 
 
@@ -195,7 +196,7 @@ public class Client extends BaseOperator {
             } else {
                 logger.info("starting job ...");
             }
-            Map<String, List<Object>> predictions = new HashMap<>();
+            Map<String, Object> predictions = new HashMap<>();
             for (int key : models.keySet()) {
                 String jobID = createJob(models.get(key));
                 String csvData;
@@ -210,7 +211,8 @@ public class Client extends BaseOperator {
                     if (!predictions.containsKey(resKey)) {
                         predictions.put(resKey, new ArrayList<>());
                     }
-                    predictions.get(resKey).addAll(jobResult.get(resKey));
+                    List<Object> result = (List<Object>) predictions.get(resKey);
+                    result.addAll(jobResult.get(resKey));
                 }
             }
             List<String> startAndEndTime = dataHandler.getStartAndEndTimestamp(data);
@@ -218,7 +220,7 @@ public class Client extends BaseOperator {
             message.output("end_time", startAndEndTime.get(1));
             message.output("id", inputSource.get("id"));
             message.output("name", inputSource.get("name"));
-            message.output("predictions", predictions);
+            message.output("predictions", toJSON(predictions));
         } catch (HttpRequest.HttpRequestException | JobHandler.JobFailedException | JobHandler.JobNotDoneException e) {
             logger.severe("error handling message");
         } catch (Throwable t) {
