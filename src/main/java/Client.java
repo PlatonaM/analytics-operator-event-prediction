@@ -185,7 +185,7 @@ public class Client extends BaseOperator {
             if (!modelIDs.get(1).isEmpty()) {
                 logger.info("waiting for " + modelIDs.get(1).size() + " models ...");
                 for (String modelID : modelIDs.get(1)) {
-                    logger.fine("waiting for model " + modelID);
+                    logger.fine("waiting for model " + modelID + " ...");
                     getAndStoreModel(models, modelID);
                 }
             }
