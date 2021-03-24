@@ -20,6 +20,7 @@ package handlers;
 
 import models.ModelData;
 import org.infai.ses.platonam.util.HttpRequest;
+import org.infai.ses.platonam.util.Json;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,8 +28,6 @@ import java.util.Map;
 
 import static org.infai.ses.platonam.util.HttpRequest.httpGet;
 import static org.infai.ses.platonam.util.HttpRequest.httpPost;
-import static org.infai.ses.platonam.util.Json.toJSON;
-import static org.infai.ses.platonam.util.Json.typeSafeMapFromJson;
 
 
 public class JobHandler {
@@ -51,7 +50,7 @@ public class JobHandler {
         return httpPost(
                 workerURL,
                 "application/json",
-                toJSON(data)
+                Json.toString(data)
         );
     }
 
@@ -60,7 +59,7 @@ public class JobHandler {
     }
 
     public Map<String, List<Object>> getJobResult(String jobID) throws HttpRequest.HttpRequestException, JobFailedException, JobNotDoneException {
-        Map<String, Object> jobData = typeSafeMapFromJson(httpGet(workerURL + "/" + jobID, "application/json"));
+        Map<String, Object> jobData = Json.typeSafeMapFromString(httpGet(workerURL + "/" + jobID, "application/json"));
         if (jobData.get("status").equals("finished")) {
             return (Map<String, List<Object>>) jobData.get("result");
         } else if (jobData.get("status").equals("failed")) {
