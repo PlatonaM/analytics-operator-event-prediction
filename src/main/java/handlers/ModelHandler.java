@@ -28,9 +28,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.infai.ses.platonam.util.HttpRequest.httpGet;
-import static org.infai.ses.platonam.util.HttpRequest.httpPost;
-
 
 public class ModelHandler {
 
@@ -51,7 +48,7 @@ public class ModelHandler {
     public List<List<String>> getModelIDs(String serviceID) throws HttpRequest.HttpRequestException {
         String reqData = "{\"service_id\":\"" + serviceID + "\",\"ml_config\":" + mlConfig + "}";
         Map<String, List<String>> respData = new Gson().fromJson(
-                httpPost(trainerURL, "application/json", reqData),
+                HttpRequest.httpPost(trainerURL, "application/json", reqData),
                 new TypeToken<Map<String, List<String>>>() {
                 }.getType()
         );
@@ -63,7 +60,7 @@ public class ModelHandler {
 
     public ModelData getModel(String modelID) throws HttpRequest.HttpRequestException {
         return new Gson().fromJson(
-                httpGet(trainerURL + "/" + modelID, "application/json"),
+                HttpRequest.httpGet(trainerURL + "/" + modelID, "application/json"),
                 ModelData.class
         );
     }
