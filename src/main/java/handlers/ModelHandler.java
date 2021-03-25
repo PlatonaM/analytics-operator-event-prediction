@@ -18,10 +18,10 @@
 package handlers;
 
 
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import models.ModelData;
 import org.infai.ses.platonam.util.HttpRequest;
+import org.infai.ses.platonam.util.Json;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,10 +47,10 @@ public class ModelHandler {
 
     public List<List<String>> getModelIDs(String serviceID) throws HttpRequest.HttpRequestException {
         String reqData = "{\"service_id\":\"" + serviceID + "\",\"ml_config\":" + mlConfig + "}";
-        Map<String, List<String>> respData = new Gson().fromJson(
+        Map<String, List<String>> respData = Json.fromString(
                 HttpRequest.httpPost(trainerURL, "application/json", reqData),
-                new TypeToken<Map<String, List<String>>>() {
-                }.getType()
+                new TypeToken<>() {
+                }
         );
         List<List<String>> modelIDs = new ArrayList<>();
         modelIDs.add(respData.get("available"));
@@ -59,7 +59,7 @@ public class ModelHandler {
     }
 
     public ModelData getModel(String modelID) throws HttpRequest.HttpRequestException {
-        return new Gson().fromJson(
+        return Json.fromString(
                 HttpRequest.httpGet(trainerURL + "/" + modelID, "application/json"),
                 ModelData.class
         );
