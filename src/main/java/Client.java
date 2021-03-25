@@ -16,6 +16,7 @@
 
 
 import com.google.gson.internal.LinkedTreeMap;
+import com.google.gson.reflect.TypeToken;
 import handlers.DataHandler;
 import handlers.JobHandler;
 import handlers.ModelHandler;
@@ -26,8 +27,6 @@ import org.infai.ses.platonam.util.Json;
 import org.infai.ses.senergy.operators.BaseOperator;
 import org.infai.ses.senergy.operators.Message;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -149,7 +148,8 @@ public class Client extends BaseOperator {
         List<Map<String, Object>> data;
         Map<?, ?> inputSource;
         try {
-            metaData = Json.typeSafeMapFromString(message.getInput("meta_data").getString());
+            metaData = Json.fromString(message.getInput("meta_data").getString(), new TypeToken<>() {
+            });
             List<?> inputSources = (ArrayList<?>) metaData.get("input_sources");
             Map<?, ?> defaultValues = (Map<?, ?>) metaData.getOrDefault("default_values", new HashMap<>());
             if (inputSources == null) {
@@ -161,9 +161,11 @@ public class Client extends BaseOperator {
             inputSource = (LinkedTreeMap<?, ?>) inputSources.get(0);
             if (compressedInput) {
                 InputStream inputStream = Compression.decompressToStream(message.getInput("data").getString());
-                data = Json.typeSafeMapListFromStream(inputStream);
+                data = Json.fromStreamToList(inputStream, new TypeToken<>() {
+                });
             } else {
-                data = Json.typeSafeMapListFromString(message.getInput("data").getString());
+                data = Json.fromString(message.getInput("data").getString(), new TypeToken<>() {
+                });
             }
             logger.info("received message containing " + data.size() + " data points ...");
             logger.info("retrieving model IDs ...");
@@ -206,10 +208,10 @@ public class Client extends BaseOperator {
                     csvData = dataHandler.getCSV(data, defaultValues, models.get(key).get(0).columns);
                 } else {
                     csvData = dataHandler.getCSV(data, defaultValues);
-//                    BufferedWriter writer = new BufferedWriter(new FileWriter("output/output_all.csv"));
-//                    writer.write(csvData);
-//                    writer.close();
                 }
+//                BufferedWriter writer = new BufferedWriter(new FileWriter("output/csv_" + System.currentTimeMillis() +"_.csv"));
+//                writer.write(csvData);
+//                writer.close();
                 addDataToJob(csvData, jobID);
                 Map<String, List<Object>> jobResult = getJobResult(jobID);
                 for (String resKey : jobResult.keySet()) {
@@ -225,7 +227,8 @@ public class Client extends BaseOperator {
             message.output("end_time", startAndEndTime.get(1));
             message.output("id", inputSource.get("id"));
             message.output("name", inputSource.get("name"));
-            message.output("predictions", Json.toString(predictions));
+            message.output("predictions", Json.toString(new TypeToken<Map<String, Object>>() {
+            }.getType(), predictions));
         } catch (HttpRequest.HttpRequestException | JobHandler.JobFailedException | JobHandler.JobNotDoneException e) {
             logger.severe("error handling message");
         } catch (Throwable t) {
