@@ -18,6 +18,7 @@
 package handlers;
 
 
+import com.google.gson.reflect.TypeToken;
 import models.ModelData;
 import org.infai.ses.platonam.util.HttpRequest;
 import org.infai.ses.platonam.util.Json;
@@ -50,7 +51,8 @@ public class JobHandler {
         return httpPost(
                 workerURL,
                 "application/json",
-                Json.toString(data)
+                Json.toString(new TypeToken<Map<String, Object>>() {
+                }.getType(), data)
         );
     }
 
@@ -59,7 +61,8 @@ public class JobHandler {
     }
 
     public Map<String, List<Object>> getJobResult(String jobID) throws HttpRequest.HttpRequestException, JobFailedException, JobNotDoneException {
-        Map<String, Object> jobData = Json.typeSafeMapFromString(httpGet(workerURL + "/" + jobID, "application/json"));
+        Map<String, Object> jobData = Json.fromString(httpGet(workerURL + "/" + jobID, "application/json"), new TypeToken<>() {
+        });
         if (jobData.get("status").equals("finished")) {
             return (Map<String, List<Object>>) jobData.get("result");
         } else if (jobData.get("status").equals("failed")) {
