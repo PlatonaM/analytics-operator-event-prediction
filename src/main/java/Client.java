@@ -151,7 +151,6 @@ public class Client extends BaseOperator {
             metaData = Json.fromString(message.getInput("meta_data").getString(), new TypeToken<>() {
             });
             List<?> inputSources = (ArrayList<?>) metaData.get("input_sources");
-            Map<?, ?> defaultValues = (Map<?, ?>) metaData.getOrDefault("default_values", new HashMap<>());
             if (inputSources == null) {
                 throw new RuntimeException("missing input source");
             }
@@ -205,9 +204,9 @@ public class Client extends BaseOperator {
                 String jobID = createJob(models.get(key));
                 String csvData;
                 if (fixFeatures) {
-                    csvData = dataHandler.getCSV(data, defaultValues, models.get(key).get(0).columns);
+                    csvData = dataHandler.getCSV(data, models.get(key).get(0).default_values, models.get(key).get(0).columns);
                 } else {
-                    csvData = dataHandler.getCSV(data, defaultValues);
+                    csvData = dataHandler.getCSV(data);
                 }
 //                BufferedWriter writer = new BufferedWriter(new FileWriter("output/csv_" + System.currentTimeMillis() +"_.csv"));
 //                writer.write(csvData);
