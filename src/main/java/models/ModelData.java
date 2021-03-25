@@ -18,6 +18,7 @@
 package models;
 
 import java.util.List;
+import java.util.Map;
 
 public class ModelData {
     public String id;
@@ -25,4 +26,5 @@ public class ModelData {
     public String config;
     public List<String> columns;
     public String data;
+    public Map<String, Object> default_values;
 }
