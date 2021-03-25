@@ -49,10 +49,7 @@ public class DataHandler {
             }
             return String.valueOf(obj);
         } else {
-            if (defaultValue != null) {
-                return String.valueOf(defaultValue);
-            }
-            return emptyPlaceholder;
+            return String.valueOf(defaultValue);
         }
     }
 
@@ -99,7 +96,7 @@ public class DataHandler {
         for (Map<String, Object> item : data) {
             StringBuilder line = new StringBuilder();
             for (int i = 0; i < lineLength; i++) {
-                line.append(getValue(item.get(lineMap.get(i)), defaultValues.get(lineMap.get(i))));
+                line.append(getValue(item.get(lineMap.get(i)), defaultValues != null ? defaultValues.get(lineMap.get(i)) : emptyPlaceholder));
                 if (i < lineLength - 1) {
                     line.append(delimiter);
                 }
@@ -110,8 +107,8 @@ public class DataHandler {
         return csvData.toString();
     }
 
-    public String getCSV(List<Map<String, Object>> data, Map<?, ?> defaultValues) {
-        return buildCSV(data, getHeader(data), defaultValues);
+    public String getCSV(List<Map<String, Object>> data) {
+        return buildCSV(data, getHeader(data), null);
     }
 
     public String getCSV(List<Map<String, Object>> data, Map<?, ?> defaultValues, List<String> safeColumns) {
