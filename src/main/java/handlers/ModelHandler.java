@@ -20,6 +20,8 @@ package handlers;
 
 import com.google.gson.reflect.TypeToken;
 import models.Model;
+import models.ModelIDs;
+import models.ModelRequest;
 import org.infai.ses.platonam.util.HttpRequest;
 import org.infai.ses.platonam.util.Json;
 
@@ -32,37 +34,51 @@ import java.util.Map;
 public class ModelHandler {
 
     private final String trainerURL;
-    private final String mlConfig;
+    private final Map<String, Object> mlConfig;
+    private final String timeField;
+    private final String sourceID;
 
-    public ModelHandler(String trainerURL, String mlConfig) {
+    public ModelHandler(String trainerURL, String mlConfig, String timeField, String sourceID) {
         if (trainerURL == null || trainerURL.isBlank()) {
             throw new RuntimeException("invalid trainer_url");
         }
         if (mlConfig == null || mlConfig.isBlank()) {
             throw new RuntimeException("invalid ml_config");
         }
+        if (timeField == null || timeField.isBlank()) {
+            throw new RuntimeException("invalid time_field");
+        }
+        if (sourceID == null || sourceID.isBlank()) {
+            throw new RuntimeException("invalid source_id");
+        }
         this.trainerURL = trainerURL;
-        this.mlConfig = mlConfig;
+        this.mlConfig = Json.fromString(mlConfig, new TypeToken<>() {
+        });
+        this.timeField = timeField;
+        this.sourceID = sourceID;
     }
 
-    public List<List<String>> getModelIDs(String serviceID) throws HttpRequest.HttpRequestException {
-        String reqData = "{\"service_id\":\"" + serviceID + "\",\"ml_config\":" + mlConfig + "}";
-        Map<String, List<String>> respData = Json.fromString(
-                HttpRequest.httpPost(trainerURL, "application/json", reqData),
-                new TypeToken<>() {
-                }
-        );
-        List<List<String>> modelIDs = new ArrayList<>();
-        modelIDs.add(respData.get("available"));
-        modelIDs.add(respData.get("pending"));
-        return modelIDs;
-    }
-
-    public Model getModel(String modelID) throws HttpRequest.HttpRequestException {
+    public ModelIDs getModelIDs(String serviceID) throws HttpRequest.HttpRequestException {
+        ModelRequest modelRequest = new ModelRequest();
+        modelRequest.service_id = serviceID;
+        modelRequest.ml_config = mlConfig;
+        modelRequest.time_field = timeField;
+        modelRequest.source_id = sourceID;
         return Json.fromString(
+                HttpRequest.httpPost(trainerURL, "application/json", Json.toString(ModelRequest.class, modelRequest)),
+                ModelIDs.class
+        );
+    }
+
+    public Model getModel(String modelID) throws HttpRequest.HttpRequestException, GetModelException {
+        Model model = Json.fromString(
                 HttpRequest.httpGet(trainerURL + "/" + modelID, "application/json"),
                 Model.class
         );
+        if (model.data == null) {
+            throw new GetModelException("no data available for " + modelID);
+        }
+        return model;
     }
 
     public int getColsHashCode(List<String> columns) {
@@ -70,5 +86,11 @@ public class ModelHandler {
         Collections.sort(colsCopy);
         String colsStr = String.join("", colsCopy);
         return colsStr.hashCode();
+    }
+
+    public static class GetModelException extends Exception {
+        public GetModelException(String errorMessage) {
+            super(errorMessage);
+        }
     }
 }
