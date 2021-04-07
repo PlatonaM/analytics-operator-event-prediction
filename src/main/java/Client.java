@@ -20,7 +20,7 @@ import com.google.gson.reflect.TypeToken;
 import handlers.DataHandler;
 import handlers.JobHandler;
 import handlers.ModelHandler;
-import models.ModelData;
+import models.Model;
 import org.infai.ses.platonam.util.Compression;
 import org.infai.ses.platonam.util.HttpRequest;
 import org.infai.ses.platonam.util.Json;
@@ -59,10 +59,10 @@ public class Client extends BaseOperator {
         this.fixFeatures = fixFeatures;
     }
 
-    private void getAndStoreModel(Map<Integer, List<ModelData>> models, String modelID) throws HttpRequest.HttpRequestException, InterruptedException {
+    private void getAndStoreModel(Map<Integer, List<Model>> models, String modelID) throws HttpRequest.HttpRequestException, InterruptedException {
         for (int i = 0; i <= requestMaxRetries; i++) {
             try {
-                ModelData model = modelHandler.getModel(modelID);
+                Model model = modelHandler.getModel(modelID);
                 int colsHashCode = modelHandler.getColsHashCode(model.columns);
                 if (!models.containsKey(colsHashCode)) {
                     models.put(colsHashCode, new ArrayList<>());
@@ -80,7 +80,7 @@ public class Client extends BaseOperator {
         }
     }
 
-    private String createJob(List<ModelData> models) throws InterruptedException, HttpRequest.HttpRequestException {
+    private String createJob(List<Model> models) throws InterruptedException, HttpRequest.HttpRequestException {
         String jobID;
         for (int i = 0; i <= requestMaxRetries; i++) {
             try {
@@ -181,7 +181,7 @@ public class Client extends BaseOperator {
                     TimeUnit.SECONDS.sleep(requestPollDelay);
                 }
             }
-            Map<Integer, List<ModelData>> models = new HashMap<>();
+            Map<Integer, List<Model>> models = new HashMap<>();
             logger.info("retrieving " + modelIDs.get(0).size() + " models ...");
             for (String modelID : modelIDs.get(0)) {
                 getAndStoreModel(models, modelID);
