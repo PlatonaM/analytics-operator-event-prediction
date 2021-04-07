@@ -20,7 +20,9 @@ import com.google.gson.reflect.TypeToken;
 import handlers.DataHandler;
 import handlers.JobHandler;
 import handlers.ModelHandler;
+import models.Job;
 import models.Model;
+import models.ModelIDs;
 import org.infai.ses.platonam.util.Compression;
 import org.infai.ses.platonam.util.HttpRequest;
 import org.infai.ses.platonam.util.Json;
@@ -59,7 +61,7 @@ public class Client extends BaseOperator {
         this.fixFeatures = fixFeatures;
     }
 
-    private void getAndStoreModel(Map<Integer, List<Model>> models, String modelID) throws HttpRequest.HttpRequestException, InterruptedException {
+    private void getAndStoreModel(Map<Integer, List<Model>> models, String modelID) throws HttpRequest.HttpRequestException, InterruptedException, ModelHandler.GetModelException {
         for (int i = 0; i <= requestMaxRetries; i++) {
             try {
                 Model model = modelHandler.getModel(modelID);
@@ -70,7 +72,7 @@ public class Client extends BaseOperator {
                 models.get(colsHashCode).add(model);
                 logger.fine("retrieved model " + model.id + " (" + model.created + ")");
                 break;
-            } catch (HttpRequest.HttpRequestException e) {
+            } catch (HttpRequest.HttpRequestException | ModelHandler.GetModelException e) {
                 if (i == requestMaxRetries) {
                     logger.severe("retrieving model " + modelID + " failed");
                     throw e;
@@ -115,13 +117,12 @@ public class Client extends BaseOperator {
     }
 
     private Map<String, List<Object>> getJobResult(String jobID) throws InterruptedException, HttpRequest.HttpRequestException, JobHandler.JobNotDoneException, JobHandler.JobFailedException {
-        Map<String, List<Object>> jobResult;
         logger.fine("waiting for job " + jobID + " to complete ...");
         for (int i = 0; i <= requestMaxRetries; i++) {
             try {
-                jobResult = jobHandler.getJobResult(jobID);
+                Job.Reduced job = jobHandler.getJob(jobID);
                 logger.fine("retrieved results from job " + jobID);
-                return jobResult;
+                return job.result;
             } catch (HttpRequest.HttpRequestException e) {
                 if (i == requestMaxRetries) {
                     logger.severe("retrieving results from job " + jobID + " failed");
@@ -168,10 +169,10 @@ public class Client extends BaseOperator {
             }
             logger.info("received message containing " + data.size() + " data points ...");
             logger.info("retrieving model IDs ...");
-            List<List<String>> modelIDs = new ArrayList<>();
+            ModelIDs modelIDs = null;
             for (int i = 0; i <= requestMaxRetries; i++) {
                 try {
-                    modelIDs.addAll(modelHandler.getModelIDs((String) inputSource.get("name")));
+                    modelIDs = modelHandler.getModelIDs((String) inputSource.get("name"));
                     break;
                 } catch (HttpRequest.HttpRequestException e) {
                     if (i == requestMaxRetries) {
@@ -182,13 +183,13 @@ public class Client extends BaseOperator {
                 }
             }
             Map<Integer, List<Model>> models = new HashMap<>();
-            logger.info("retrieving " + modelIDs.get(0).size() + " models ...");
-            for (String modelID : modelIDs.get(0)) {
+            logger.info("retrieving " + modelIDs.available.size() + " models ...");
+            for (String modelID : modelIDs.available) {
                 getAndStoreModel(models, modelID);
             }
-            if (!modelIDs.get(1).isEmpty()) {
-                logger.info("waiting for " + modelIDs.get(1).size() + " models ...");
-                for (String modelID : modelIDs.get(1)) {
+            if (!modelIDs.pending.isEmpty()) {
+                logger.info("waiting for " + modelIDs.pending.size() + " models ...");
+                for (String modelID : modelIDs.pending) {
                     logger.fine("waiting for model " + modelID + " ...");
                     getAndStoreModel(models, modelID);
                 }
