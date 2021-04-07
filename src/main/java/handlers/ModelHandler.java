@@ -19,7 +19,7 @@ package handlers;
 
 
 import com.google.gson.reflect.TypeToken;
-import models.ModelData;
+import models.Model;
 import org.infai.ses.platonam.util.HttpRequest;
 import org.infai.ses.platonam.util.Json;
 
@@ -58,10 +58,10 @@ public class ModelHandler {
         return modelIDs;
     }
 
-    public ModelData getModel(String modelID) throws HttpRequest.HttpRequestException {
+    public Model getModel(String modelID) throws HttpRequest.HttpRequestException {
         return Json.fromString(
                 HttpRequest.httpGet(trainerURL + "/" + modelID, "application/json"),
-                ModelData.class
+                Model.class
         );
     }
 
