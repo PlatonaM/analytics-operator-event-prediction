@@ -38,7 +38,8 @@ public class Operator {
                 config.getConfigValue("trainer_url", null),
                 config.getConfigValue("ml_config", null),
                 config.getConfigValue("time_field", null),
-                config.getConfigValue("source_id", null)
+                config.getConfigValue("export_id", null),
+                config.getConfigValue("service_id", null)
         );
         JobHandler jobHandler = new JobHandler(
                 config.getConfigValue("worker_url", null),
@@ -51,7 +52,9 @@ public class Operator {
                 Boolean.parseBoolean(config.getConfigValue("compressed_input", "false")),
                 Long.parseLong(config.getConfigValue("request_poll_delay", "15")),
                 Long.parseLong(config.getConfigValue("request_max_retries", "240")),
-                Boolean.parseBoolean(config.getConfigValue("fix_features", "false"))
+                Boolean.parseBoolean(config.getConfigValue("fix_features", "false")),
+                config.getConfigValue("device_id", null),
+                config.getConfigValue("service_id", null)
         );
         Stream stream = new Stream();
         stream.start(client);
