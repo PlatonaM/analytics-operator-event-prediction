@@ -49,8 +49,10 @@ public class Client extends BaseOperator {
     private final long requestPollDelay;
     private final long requestMaxRetries;
     private final boolean fixFeatures;
+    private final String deviceID;
+    private final String serviceID;
 
-    public Client(DataHandler dataHandler, ModelHandler modelHandler, JobHandler jobHandler, boolean compressedInput, long requestPollDelay, long requestMaxRetries, boolean fixFeatures) {
+    public Client(DataHandler dataHandler, ModelHandler modelHandler, JobHandler jobHandler, boolean compressedInput, long requestPollDelay, long requestMaxRetries, boolean fixFeatures, String deviceID, String serviceID) {
         this.dataHandler = dataHandler;
         this.modelHandler = modelHandler;
         this.jobHandler = jobHandler;
@@ -58,6 +60,8 @@ public class Client extends BaseOperator {
         this.requestPollDelay = requestPollDelay;
         this.requestMaxRetries = requestMaxRetries;
         this.fixFeatures = fixFeatures;
+        this.deviceID = deviceID;
+        this.serviceID = serviceID;
     }
 
     private void getAndStoreModel(Map<Integer, List<Model>> models, String modelID) throws HttpRequest.HttpRequestException, InterruptedException, ModelHandler.GetModelException {
@@ -213,6 +217,8 @@ public class Client extends BaseOperator {
             List<String> startAndEndTime = dataHandler.getStartAndEndTimestamp(data);
             message.output("start_time", startAndEndTime.get(0));
             message.output("end_time", startAndEndTime.get(1));
+            message.output("device_id", deviceID);
+            message.output("service_id", serviceID);
             message.output("predictions", Json.toString(new TypeToken<Map<String, Object>>() {
             }.getType(), predictions));
         } catch (HttpRequest.HttpRequestException | JobHandler.JobFailedException | JobHandler.JobNotDoneException e) {
