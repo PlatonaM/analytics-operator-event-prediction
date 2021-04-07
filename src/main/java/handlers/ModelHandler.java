@@ -37,8 +37,10 @@ public class ModelHandler {
     private final Map<String, Object> mlConfig;
     private final String timeField;
     private final String sourceID;
+    private final String serviceID;
 
-    public ModelHandler(String trainerURL, String mlConfig, String timeField, String sourceID) {
+    public ModelHandler(String trainerURL, String mlConfig, String timeField, String sourceID, String serviceID) {
+        this.serviceID = serviceID;
         if (trainerURL == null || trainerURL.isBlank()) {
             throw new RuntimeException("invalid trainer_url");
         }
