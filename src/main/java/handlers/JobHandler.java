@@ -19,7 +19,7 @@ package handlers;
 
 
 import com.google.gson.reflect.TypeToken;
-import models.ModelData;
+import models.Model;
 import org.infai.ses.platonam.util.HttpRequest;
 import org.infai.ses.platonam.util.Json;
 
@@ -43,7 +43,7 @@ public class JobHandler {
         this.timeField = timeField;
     }
 
-    public String createJob(List<ModelData> models) throws HttpRequest.HttpRequestException {
+    public String createJob(List<Model> models) throws HttpRequest.HttpRequestException {
         Map<String, Object> data = new HashMap<>();
         data.put("time_field", timeField);
         data.put("sorted_data", true);
