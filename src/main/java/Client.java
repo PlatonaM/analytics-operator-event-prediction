@@ -15,7 +15,6 @@
  */
 
 
-import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.reflect.TypeToken;
 import handlers.DataHandler;
 import handlers.JobHandler;
@@ -145,20 +144,9 @@ public class Client extends BaseOperator {
 
     @Override
     public void run(Message message) {
-        Map<String, Object> metaData;
         List<Map<String, Object>> data;
         Map<?, ?> inputSource;
         try {
-            metaData = Json.fromString(message.getInput("meta_data").getString(), new TypeToken<>() {
-            });
-            List<?> inputSources = (ArrayList<?>) metaData.get("input_sources");
-            if (inputSources == null) {
-                throw new RuntimeException("missing input source");
-            }
-            if (inputSources.size() > 1) {
-                throw new RuntimeException("multiple input sources not supported");
-            }
-            inputSource = (LinkedTreeMap<?, ?>) inputSources.get(0);
             if (compressedInput) {
                 InputStream inputStream = Compression.decompressToStream(message.getInput("data").getString());
                 data = Json.fromStreamToList(inputStream, new TypeToken<>() {
@@ -225,8 +213,6 @@ public class Client extends BaseOperator {
             List<String> startAndEndTime = dataHandler.getStartAndEndTimestamp(data);
             message.output("start_time", startAndEndTime.get(0));
             message.output("end_time", startAndEndTime.get(1));
-            message.output("id", inputSource.get("id"));
-            message.output("name", inputSource.get("name"));
             message.output("predictions", Json.toString(new TypeToken<Map<String, Object>>() {
             }.getType(), predictions));
         } catch (HttpRequest.HttpRequestException | JobHandler.JobFailedException | JobHandler.JobNotDoneException e) {
