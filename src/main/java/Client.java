@@ -172,7 +172,7 @@ public class Client extends BaseOperator {
             ModelIDs modelIDs = null;
             for (int i = 0; i <= requestMaxRetries; i++) {
                 try {
-                    modelIDs = modelHandler.getModelIDs((String) inputSource.get("name"));
+                    modelIDs = modelHandler.getModelIDs();
                     break;
                 } catch (HttpRequest.HttpRequestException e) {
                     if (i == requestMaxRetries) {

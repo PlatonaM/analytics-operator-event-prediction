@@ -60,7 +60,7 @@ public class ModelHandler {
         this.sourceID = sourceID;
     }
 
-    public ModelIDs getModelIDs(String serviceID) throws HttpRequest.HttpRequestException {
+    public ModelIDs getModelIDs() throws HttpRequest.HttpRequestException {
         ModelRequest modelRequest = new ModelRequest();
         modelRequest.service_id = serviceID;
         modelRequest.ml_config = mlConfig;
