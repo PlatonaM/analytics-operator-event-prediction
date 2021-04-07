@@ -20,11 +20,14 @@ package models;
 import java.util.List;
 import java.util.Map;
 
-public class ModelData {
+public class Model {
     public String id;
     public String created;
-    public String config;
+    public Map<String, Object> config;
     public List<String> columns;
     public String data;
     public Map<String, Object> default_values;
+    public String service_id;
+    public String source_id;
+    public String time_field;
 }
