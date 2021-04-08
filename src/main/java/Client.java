@@ -51,8 +51,9 @@ public class Client extends BaseOperator {
     private final boolean fixFeatures;
     private final String deviceID;
     private final String serviceID;
+    private final boolean skipOnMissing;
 
-    public Client(DataHandler dataHandler, ModelHandler modelHandler, JobHandler jobHandler, boolean compressedInput, long requestPollDelay, long requestMaxRetries, boolean fixFeatures, String deviceID, String serviceID) {
+    public Client(DataHandler dataHandler, ModelHandler modelHandler, JobHandler jobHandler, boolean compressedInput, long requestPollDelay, long requestMaxRetries, boolean fixFeatures, String deviceID, String serviceID, boolean skipOnMissing) {
         this.dataHandler = dataHandler;
         this.modelHandler = modelHandler;
         this.jobHandler = jobHandler;
@@ -62,6 +63,7 @@ public class Client extends BaseOperator {
         this.fixFeatures = fixFeatures;
         this.deviceID = deviceID;
         this.serviceID = serviceID;
+        this.skipOnMissing = skipOnMissing;
     }
 
     private void getAndStoreModel(Map<Integer, List<Model>> models, String modelID) throws HttpRequest.HttpRequestException, InterruptedException, ModelHandler.GetModelException {
@@ -179,7 +181,7 @@ public class Client extends BaseOperator {
             for (String modelID : modelIDs.available) {
                 getAndStoreModel(models, modelID);
             }
-            if (!modelIDs.pending.isEmpty()) {
+            if (!modelIDs.pending.isEmpty() && !skipOnMissing) {
                 logger.info("waiting for " + modelIDs.pending.size() + " models ...");
                 for (String modelID : modelIDs.pending) {
                     logger.fine("waiting for model " + modelID + " ...");
@@ -189,8 +191,10 @@ public class Client extends BaseOperator {
             if (models.keySet().size() > 1) {
                 logger.warning("using models with diverging feature sets");
                 logger.info("starting " + models.keySet().size() + " jobs ...");
-            } else {
+            } else if (models.keySet().size() == 1) {
                 logger.info("starting job ...");
+            } else {
+                throw new Exception("no models available");
             }
             Map<String, Object> predictions = new HashMap<>();
             for (int key : models.keySet()) {
