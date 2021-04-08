@@ -10,7 +10,7 @@ RUN mvn clean install
 
 FROM openjdk:11-jre-slim
 
-ENV NAME flatten
+ENV NAME event-prediction
 
 COPY --from=builder /usr/src/app/target/operator-${NAME}-jar-with-dependencies.jar /opt/operator.jar
 
