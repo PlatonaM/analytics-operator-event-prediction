@@ -232,7 +232,6 @@ public class Client extends BaseOperator {
     @Override
     public Message configMessage(Message message) {
         message.addInput("data");
-        message.addInput("meta_data");
         return message;
     }
 }
