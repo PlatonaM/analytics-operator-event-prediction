@@ -54,7 +54,8 @@ public class Operator {
                 Long.parseLong(config.getConfigValue("request_max_retries", "240")),
                 Boolean.parseBoolean(config.getConfigValue("fix_features", "false")),
                 config.getConfigValue("device_id", null),
-                config.getConfigValue("service_id", null)
+                config.getConfigValue("service_id", null),
+                Boolean.parseBoolean(config.getConfigValue("skip_on_missing", "true"))
         );
         Stream stream = new Stream();
         stream.start(client);
