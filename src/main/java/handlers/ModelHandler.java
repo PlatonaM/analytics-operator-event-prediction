@@ -36,10 +36,9 @@ public class ModelHandler {
     private final String trainerURL;
     private final Map<String, Object> mlConfig;
     private final String timeField;
-    private final String sourceID;
     private final String serviceID;
 
-    public ModelHandler(String trainerURL, String mlConfig, String timeField, String sourceID, String serviceID) {
+    public ModelHandler(String trainerURL, String mlConfig, String timeField, String serviceID) {
         this.serviceID = serviceID;
         if (trainerURL == null || trainerURL.isBlank()) {
             throw new RuntimeException("invalid trainer_url");
@@ -50,14 +49,10 @@ public class ModelHandler {
         if (timeField == null || timeField.isBlank()) {
             throw new RuntimeException("invalid time_field");
         }
-        if (sourceID == null || sourceID.isBlank()) {
-            throw new RuntimeException("invalid source_id");
-        }
         this.trainerURL = trainerURL;
         this.mlConfig = Json.fromString(mlConfig, new TypeToken<>() {
         });
         this.timeField = timeField;
-        this.sourceID = sourceID;
     }
 
     public ModelIDs getModelIDs() throws HttpRequest.HttpRequestException {
@@ -65,7 +60,6 @@ public class ModelHandler {
         modelRequest.service_id = serviceID;
         modelRequest.ml_config = mlConfig;
         modelRequest.time_field = timeField;
-        modelRequest.source_id = sourceID;
         return Json.fromString(
                 HttpRequest.httpPost(trainerURL, "application/json", Json.toString(ModelRequest.class, modelRequest)),
                 ModelIDs.class

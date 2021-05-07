@@ -22,7 +22,6 @@ import java.util.Map;
 
 public class ModelRequest {
     public String service_id;
-    public String source_id;
     public Map<String, Object> ml_config;
     public String time_field;
 }

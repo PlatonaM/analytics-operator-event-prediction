@@ -28,6 +28,5 @@ public class Model {
     public String data;
     public Map<String, Object> default_values;
     public String service_id;
-    public String source_id;
     public String time_field;
 }
