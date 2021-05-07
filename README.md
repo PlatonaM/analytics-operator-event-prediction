@@ -16,7 +16,6 @@ Client for [analytics-worker-event-prediction](https://github.com/PlatonaM/analy
 + `logging_level`: 
 + `device_id`:
 + `service_id`:
-+ `export_id`:
 + `skip_on_missing`: skip model if not available
 + `ml_config`:
 + `empty_placeholder`:
