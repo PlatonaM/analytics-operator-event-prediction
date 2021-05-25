@@ -59,7 +59,6 @@ public class ModelHandler {
         ModelRequest modelRequest = new ModelRequest();
         modelRequest.service_id = serviceID;
         modelRequest.ml_config = mlConfig;
-        modelRequest.time_field = timeField;
         return Json.fromString(
                 HttpRequest.httpPost(trainerURL, "application/json", Json.toString(ModelRequest.class, modelRequest)),
                 ModelIDs.class
