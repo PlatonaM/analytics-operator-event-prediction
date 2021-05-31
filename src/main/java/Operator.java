@@ -40,8 +40,7 @@ public class Operator {
                 config.getConfigValue("service_id", null)
         );
         JobHandler jobHandler = new JobHandler(
-                config.getConfigValue("worker_url", null),
-                config.getConfigValue("time_field", null)
+                config.getConfigValue("worker_url", null)
         );
         Client client = new Client(
                 dataHandler,

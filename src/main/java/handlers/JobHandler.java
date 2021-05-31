@@ -31,14 +31,12 @@ import static org.infai.ses.platonam.util.HttpRequest.httpPost;
 
 public class JobHandler {
     private final String workerURL;
-    private final String timeField;
 
-    public JobHandler(String workerURL, String timeField) {
+    public JobHandler(String workerURL) {
         if (workerURL == null || workerURL.isBlank()) {
             throw new RuntimeException("invalid worker_url: " + workerURL);
         }
         this.workerURL = workerURL;
-        this.timeField = timeField;
     }
 
     public String createJob(List<Model> models) throws HttpRequest.HttpRequestException {
