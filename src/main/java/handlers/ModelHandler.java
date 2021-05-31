@@ -35,10 +35,9 @@ public class ModelHandler {
 
     private final String trainerURL;
     private final Map<String, Object> mlConfig;
-    private final String timeField;
     private final String serviceID;
 
-    public ModelHandler(String trainerURL, String mlConfig, String timeField, String serviceID) {
+    public ModelHandler(String trainerURL, String mlConfig, String serviceID) {
         this.serviceID = serviceID;
         if (trainerURL == null || trainerURL.isBlank()) {
             throw new RuntimeException("invalid trainer_url");
@@ -46,13 +45,9 @@ public class ModelHandler {
         if (mlConfig == null || mlConfig.isBlank()) {
             throw new RuntimeException("invalid ml_config");
         }
-        if (timeField == null || timeField.isBlank()) {
-            throw new RuntimeException("invalid time_field");
-        }
         this.trainerURL = trainerURL;
         this.mlConfig = Json.fromString(mlConfig, new TypeToken<>() {
         });
-        this.timeField = timeField;
     }
 
     public ModelIDs getModelIDs() throws HttpRequest.HttpRequestException {

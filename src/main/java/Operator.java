@@ -37,7 +37,6 @@ public class Operator {
         ModelHandler modelHandler = new ModelHandler(
                 config.getConfigValue("trainer_url", null),
                 config.getConfigValue("ml_config", null),
-                config.getConfigValue("time_field", null),
                 config.getConfigValue("service_id", null)
         );
         JobHandler jobHandler = new JobHandler(
